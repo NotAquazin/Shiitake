@@ -31,11 +31,10 @@ const Register = () => {
       return setError('Username must be 1-20 alphanumeric characters (no spaces or special characters).');
     }
 
-    // Email: Must end in @obf.ateneo.edu or @ateneo.edu
-    // Note: If you want to use @student.ateneo.edu like we changed in the backend, you can update this regex.
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@(obf\.ateneo\.edu|ateneo\.edu)$/;
+    // Email: Must end in @student.ateneo.edu or @ateneo.edu
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(student\.ateneo\.edu|ateneo\.edu)$/;
     if (!emailRegex.test(email)) {
-      return setError('Please use a valid Ateneo email address ending in @obf.ateneo.edu or @ateneo.edu.');
+      return setError('Please use a valid Ateneo email address ending in @student.ateneo.edu or @ateneo.edu.');
     }
 
     // Password: Minimum 8 characters
