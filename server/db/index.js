@@ -8,18 +8,13 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// Test the connection on startup
-pool.query('SELECT NOW()')
-  .then(res => {
-    console.log('Database connection successful. Current DB time:', res.rows[0].now);
-  })
-  .catch(err => {
-    console.error('Failed to connect to the database on startup:', err.message);
-  });
-
-// Handle pool errors gracefully to prevent the app from crashing
-pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle database client:', err.message);
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Error connecting to the database', err);
+  } else {
+    console.log('Successfully connected to the database at:', res.rows[0].now);
+  }
 });
-
-module.exports = { pool };
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
