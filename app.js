@@ -10,13 +10,13 @@ const Review = require('./models/reviewModel');
 const app = express();
 const PORT = 3000;
 
-// --- 1. THE ASSOCIATIONS (The "Bridge") ---
+// Associations
 User.hasMany(Review);
 Review.belongsTo(User);
 CR.hasMany(Review);
 Review.belongsTo(CR);
 
-// --- 2. ROUTES ---
+// Routes
 
 // Serve the static HTML file when someone visits http://localhost:3000
 app.get('/', (req, res) => {
@@ -36,7 +36,7 @@ app.get('/api/crs', async (req, res) => {
     }
 });
 
-// --- 3. START SERVER & SYNC DB ---
+// Start server and sync DB
 const startApp = async () => {
     try {
         // Sync database first, then start listening for requests

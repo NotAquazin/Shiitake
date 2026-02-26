@@ -3,7 +3,7 @@ const User = require('./models/userModel');
 const CR = require('./models/crModel');
 const Review = require('./models/reviewModel');
 
-// --- THE ASSOCIATIONS (Must be here too!) ---
+// Associations 
 User.hasMany(Review);
 Review.belongsTo(User);
 CR.hasMany(Review);
