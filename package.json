@@ -1,0 +1,26 @@
+{
+  "name": "shiitake",
+  "version": "1.0.0",
+  "description": "Shiitake is a helper website that is an interactive map and review system for ADMU undergraduates to help them find the most comfortable restrooms that suit their individual needs.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NotAquazin/Shiitake.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NotAquazin/Shiitake/issues"
+  },
+  "homepage": "https://github.com/NotAquazin/Shiitake#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.19.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
+  }
+}
