@@ -1,0 +1,83 @@
+import StarRating from './StarRating'
+
+function ReviewCard({ review, currentUser, onLike, onDislike, onEdit, onDelete, onReport }) {
+
+  // check if this review belongs to the current user
+  const isMyReview = review.author === currentUser
+
+  return (
+    <div style={{ background: 'white', border: '1px solid #DFD0B8', borderRadius: '10px', padding: '14px 16px', marginBottom: '10px' }}>
+
+      {/* author name, date, and stars */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div>
+          <span style={{ fontWeight: '600', fontSize: '14px', color: '#153448' }}>
+            {review.author}
+          </span>
+          <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
+            {review.timestamp}
+          </span>
+        </div>
+        <StarRating rating={review.rating} interactive={false} />
+      </div>
+
+      {/* review text — only renders if there is text */}
+      {review.text && (
+        <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#444', lineHeight: '1.6' }}>
+          {review.text}
+        </p>
+      )}
+
+      {/* like, dislike, and action buttons */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+
+        <button onClick={() => onLike(review.id)} style={pillBtn('#e8f5e9', '#2e7d32')}>
+          👍 {review.likes}
+        </button>
+
+        <button onClick={() => onDislike(review.id)} style={pillBtn('#fce4ec', '#c62828')}>
+          👎 {review.dislikes}
+        </button>
+
+        {/* pushes edit/delete/report to the right */}
+        <div style={{ flex: 1 }} />
+
+        {/* your own review — show edit and delete */}
+        {isMyReview && (
+          <>
+            <button onClick={() => onEdit(review)} style={pillBtn('#e3f2fd', '#1565c0')}>
+              Edit
+            </button>
+            <button onClick={() => onDelete(review.id)} style={pillBtn('#fce4ec', '#c62828')}>
+              Delete
+            </button>
+          </>
+        )}
+
+        {/* someone else's review — show report */}
+        {!isMyReview && (
+          <button onClick={() => onReport(review.id)} style={pillBtn('#fff3e0', '#e65100')}>
+            Report
+          </button>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
+// returns a style object for the small pill buttons
+function pillBtn(background, color) {
+  return {
+    padding: '3px 10px',
+    fontSize: '11px',
+    fontWeight: '500',
+    border: 'none',
+    borderRadius: '20px',
+    background,
+    color,
+    cursor: 'pointer',
+  }
+}
+
+export default ReviewCard
