@@ -32,9 +32,12 @@ const Login = () => {
       });
 
       // Extract token and save to localStorage
-      const { token } = response.data;
+      const { token, user } = response.data;
       if (token) {
         localStorage.setItem('shiitake_token', token);
+        if (user && user.username) {
+          localStorage.setItem('shiitake_username', user.username);
+        }
         // Redirect to home
         navigate('/');
       }

@@ -12,6 +12,9 @@ const Home = () => {
 };
 
 const App = () => {
+  const username = localStorage.getItem('shiitake_username');
+  const isLoggedIn = !!localStorage.getItem('shiitake_token');
+
   return (
     <Router>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -22,12 +25,20 @@ const App = () => {
               <li className="nav-item">
                 <Link className="nav-link" to="/">Home</Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/login">Login</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/register">Register</Link>
-              </li>
+              {!isLoggedIn ? (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/login">Login</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/register">Register</Link>
+                  </li>
+                </>
+              ) : (
+                <li className="nav-item d-flex align-items-center">
+                  <span className="navbar-text ms-3 text-white fw-bold">Hello, {username || 'User'}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
