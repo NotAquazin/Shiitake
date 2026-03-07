@@ -1,0 +1,26 @@
+.interactive-map-container {
+  font-family: sans-serif;
+}
+
+.cr-list {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.cr-card {
+  background: white;
+  transition: transform 0.2s;
+}
+.cr-card:hover {
+  transform: translateY(-2px);
+}
+
+.tag {
+  background: #003366;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-right: 5px;
+}

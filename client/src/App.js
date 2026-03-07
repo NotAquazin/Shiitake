@@ -1,12 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
-import Register from './components/Register';
+import Register from './components/Register';import InteractiveMap from './components/InteractiveMap';
 
 const Home = () => {
+  const token = localStorage.getItem('shiitake_token');
+
   return (
     <div className="container mt-5">
-      <h1 className="text-center">Shiitake Interactive Map</h1>
+      <h1 className="text-center mb-4">Shiitake CR Navigator</h1>
+      {token ? (
+        <InteractiveMap />
+      ) : (
+        <div className="alert alert-info text-center">
+          <h4>Welcome to the Ateneo CR Navigator!</h4>
+          <p>Please <Link to="/login">Login</Link> or <Link to="/register">Register</Link> to view the interactive map.</p>
+        </div>
+      )}
     </div>
   );
 };
