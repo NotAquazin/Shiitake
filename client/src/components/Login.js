@@ -38,8 +38,8 @@ const Login = () => {
         if (user && user.username) {
           localStorage.setItem('shiitake_username', user.username);
         }
-        // Redirect to home
-        navigate('/');
+        // Redirect to home and force reload to update navbar
+        window.location.href = '/';
       }
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {

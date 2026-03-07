@@ -15,6 +15,12 @@ const App = () => {
   const username = localStorage.getItem('shiitake_username');
   const isLoggedIn = !!localStorage.getItem('shiitake_token');
 
+  const handleLogout = () => {
+    localStorage.removeItem('shiitake_token');
+    localStorage.removeItem('shiitake_username');
+    window.location.href = '/login'; // Redirect to login
+  };
+
   return (
     <Router>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -35,9 +41,14 @@ const App = () => {
                   </li>
                 </>
               ) : (
-                <li className="nav-item d-flex align-items-center">
-                  <span className="navbar-text ms-3 text-white fw-bold">Hello, {username || 'User'}</span>
-                </li>
+                <>
+                  <li className="nav-item d-flex align-items-center">
+                    <span className="navbar-text ms-3 text-white fw-bold me-3">Hello, {username || 'User'}</span>
+                  </li>
+                  <li className="nav-item d-flex align-items-center">
+                    <button onClick={handleLogout} className="btn btn-outline-danger btn-sm">Logout</button>
+                  </li>
+                </>
               )}
             </ul>
           </div>
