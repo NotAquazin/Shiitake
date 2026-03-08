@@ -20,6 +20,9 @@ Utilized docker containers for everyone to have the same database in their local
 
 ## Testing
 1. Open `test.rest`
+2. Wait until this shows:
+    * app-1  | Server has started on port: 3000
+    * app-1  | ✅ All models were synchronized successfully.
 2. Run the first `GET` command by clicking *"Send request"*
     * The one with /setup
     * Creates the table

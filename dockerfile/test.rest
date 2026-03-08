@@ -1,14 +1,43 @@
-###
-GET http://localhost:13000/setup
+### Get all Users
+GET http://localhost:13000/users
 
-###
-GET http://localhost:13000
-
-###
-POST http://localhost:13000
+### Create a new User
+POST http://localhost:13000/users
 Content-Type: application/json
 
 {
-    "name" : "nico",
-    "location" : "cainta"
+    "username": "Ateaanean123",
+    "email": "studeaant@obf.ateneo.edu",
+    "password": "securepassword1",
+    "description": "I need the best restrooms on campus.",
+    "role": "user"
+}
+### Get all CRs
+GET http://localhost:13000/crs
+
+### Create a new CR
+POST http://localhost:13000/crs
+Content-Type: application/json
+
+{
+    "name": "MVP 1st Floor Men's",
+    "building": "MVP",
+    "floor": 1,
+    "longitude": 121.0777,
+    "latitude": 14.6394,
+    "status": "available",
+    "tags": ["Bidet", "Spacious"]
+}
+
+### Get all Reviews
+GET http://localhost:13000/reviews
+
+### Create a new Review
+POST http://localhost:13000/reviews
+Content-Type: application/json
+
+{
+    "rating": 5,
+    "comment": "Very clean, water pressure is great!",
+    "reviewTags": ["Clean", "Well-lit"]
 }

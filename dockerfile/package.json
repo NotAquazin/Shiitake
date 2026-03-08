@@ -21,6 +21,7 @@
   "homepage": "https://github.com/NotAquazin/Shiitake#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "sequelize": "^6.37.8"
   }
 }
