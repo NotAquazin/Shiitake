@@ -9,6 +9,6 @@ POST http://localhost:13000
 Content-Type: application/json
 
 {
-    "name" : "ian",
-    "location" : "makati"
+    "name" : "nico",
+    "location" : "cainta"
 }
