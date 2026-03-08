@@ -32,3 +32,6 @@ Utilized docker containers for everyone to have the same database in their local
 1. The initial setup will take a few minutes as Docker downloads the official PostgreSQL image. Subsequent starts will be nearly instant.
 2. Database data is saved locally on your machine
     * Will implement something to have a consistent database throughout machines
+
+## Reference
+[Youtube Video](https://www.youtube.com/watch?v=sDPw2Yp4JwE)
