@@ -2,11 +2,17 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
+import Map from "./components/Map";
+import CRPage from "./components/CRPage";
+
 
 const Home = () => {
   return (
     <div className="container mt-5">
       <h1 className="text-center">Shiitake Interactive Map</h1>
+        <div className="mt-4">
+        <Map/>
+        </div>
     </div>
   );
 };
@@ -39,7 +45,7 @@ const App = () => {
                   <li className="nav-item">
                     <Link className="nav-link" to="/register">Register</Link>
                   </li>
-                </>
+                </> 
               ) : (
                 <>
                   <li className="nav-item d-flex align-items-center">
@@ -59,6 +65,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/cr/:id" element={<CRPage />} /> 
       </Routes>
     </Router>
   );
