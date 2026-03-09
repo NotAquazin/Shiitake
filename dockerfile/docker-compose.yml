@@ -1,6 +1,7 @@
 version: "3"
 services:
   app:
+    build: .
     # app name
     image: shiitake
     # portmapping, 3000 port but 1337 is local
