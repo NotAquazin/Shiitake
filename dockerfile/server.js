@@ -1,19 +1,22 @@
+require('dotenv').config();
+
 // Using Sequelize to add models
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'database123',
-  process.env.DB_USER || 'user123',
-  process.env.DB_PASSWORD || 'password123',
-  {
-    host: process.env.DB_HOST || 'db', // 'db' is the Docker service name
-    dialect: 'postgres',
-    logging: false // Set to console.log to see the raw SQL queries
+
+// Enable Supabase
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  logging: false, // Set to console.log to see the raw SQL queries
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // This is required for Supabase connections
+    }
   }
-);
+});
 
 const express = require('express')
-const pool = require('./database')
-const port = 3000
+const port = process.env.PORT || 3000
 
 
 const User = require('./models/userModel')(sequelize);
