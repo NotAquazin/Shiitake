@@ -32,11 +32,14 @@ const Login = () => {
       });
 
       // Extract token and save to localStorage
-      const { token } = response.data;
+      const { token, user } = response.data;
       if (token) {
         localStorage.setItem('shiitake_token', token);
-        // Redirect to home
-        navigate('/');
+        if (user && user.username) {
+          localStorage.setItem('shiitake_username', user.username);
+        }
+        // Redirect to home and force reload to update navbar
+        window.location.href = '/';
       }
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {
