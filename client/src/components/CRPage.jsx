@@ -4,28 +4,57 @@
 // sortBy - how reviews are sorted
 // reported - Set of review IDs that have been reported (hides them)
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import sampleCR from './crData';
 import StarRating from './StarRating';
 import ReviewForm from './ReviewForm';
 import ReviewCard from './ReviewCard';
 import { useParams } from 'react-router-dom';
 
 const CRPage = () => {
-  const { id } = useParams(); // 'faura-1' in this example
+  const { pk } = useParams(); // 'faura-1' in this example
+  const [cr, setCR] = useState({
+    building: '',
+    floor: '',
+    status: '',
+    tags: []
+  });
+  const [reviews, setReviews] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const [showForm,      setShowForm]      = useState(false)
+  const [editingReview, setEditingReview] = useState(null)
+  const [sortBy,        setSortBy]        = useState('Newest')
+  const [reported,      setReported]      = useState(new Set())
+
+  useEffect(() => {
+    async function loadCR() {
+        try {
+            // Use pk in the fetch URL
+            const crRes = await fetch(`http://localhost:13000/CRs/${pk}`);
+            const crData = await crRes.json();
+            setCR(crData);
+            console.log(crData);
+
+            const revRes = await fetch('http://localhost:13000/reviews');
+            const allReviews = await revRes.json();
+
+            // Filter reviews using the primary key
+            const myReviews = allReviews.filter(r => r.CRId === parseInt(pk));
+            setReviews(myReviews);
+
+            setLoading(false);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setLoading(false);
+        }
+    }
+    loadCR();
+      }, [pk]); // Re-run if the primary key changes
 
 // The logged-in user's name. Replace with real auth later.
   const CURRENT_USER = 'You'
 
-  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']
-
-
-    const [reviews,       setReviews]       = useState(sampleCR.reviews)
-    const [showForm,      setShowForm]      = useState(false)
-    const [editingReview, setEditingReview] = useState(null)
-    const [sortBy,        setSortBy]        = useState('Newest')
-    const [reported,      setReported]      = useState(new Set())
+  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
     // Checks if already posted review
     const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
@@ -37,8 +66,8 @@ const CRPage = () => {
 
     // Sort a copy of reviews (never mutate state directly)
     const sortedReviews = [...reviews].sort((a, b) => {
-      if (sortBy === 'Newest')        return b.timestamp.localeCompare(a.timestamp)
-      if (sortBy === 'Oldest')        return a.timestamp.localeCompare(b.timestamp)
+      if (sortBy === 'Newest')        return b.createdAt.localeCompare(a.createdAt)
+      if (sortBy === 'Oldest')        return a.createdAt.localeCompare(b.createdAt)
       if (sortBy === 'Highest Rated') return b.rating - a.rating
       if (sortBy === 'Lowest Rated')  return a.rating - b.rating
       if (sortBy === 'Most Liked')    return b.likes   - a.likes
@@ -61,13 +90,13 @@ const CRPage = () => {
 
     function handleLike(reviewId) {
       setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, likes: r.likes + 1 } : r
+        r.pk === reviewId ? { ...r, likes: r.likes + 1 } : r
       ))
     }
 
     function handleDislike(reviewId) {
       setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, dislikes: r.dislikes + 1 } : r
+        r.pk === reviewId ? { ...r, dislikes: r.dislikes + 1 } : r
       ))
     }
 
@@ -112,7 +141,7 @@ const CRPage = () => {
             color: 'white',
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {sampleCR.building} Hall — Floor {sampleCR.floor}
+              {cr.building} — Floor {cr.floor}
             </h1>
 
             {/* Availability badge */}
@@ -122,10 +151,10 @@ const CRPage = () => {
               borderRadius: '20px',
               fontSize: '12px',
               fontWeight: '600',
-              background: sampleCR.availability === 'Available' ? '#4CAF50' : '#e53935',
+              background: cr.status === 'available' ? '#4CAF50' : '#e53935',
               marginBottom: '12px',
             }}>
-              {sampleCR.availability}
+              {cr.status}
             </span>
 
             {/* Average rating */}
@@ -141,19 +170,19 @@ const CRPage = () => {
               Amenities
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {sampleCR.amenities.map((amenity) => (
+              {cr.tags.map((amenity) => (
                 <span
-                  key={amenity.label}
+                  key={amenity}
                   style={{
                     padding: '3px 10px',
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: '500',
-                    background: amenity.working ? '#d4edda' : '#f8d7da',
-                    color:      amenity.working ? '#155724' : '#721c24',
+                    background: '#d4edda'
+
                   }}
                 >
-                  {amenity.working ? '✓' : '✗'} {amenity.label}
+                {amenity}
                 </span>
               ))}
             </div>
@@ -217,7 +246,7 @@ const CRPage = () => {
             {/* The review form — only shown when showForm is true */}
             {showForm && (
               <ReviewForm
-                cr={sampleCR}
+                cr={cr}
                 existingReview={editingReview}
                 onSubmit={handleSubmitReview}
                 onCancel={() => {

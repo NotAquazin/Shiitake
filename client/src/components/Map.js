@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -17,8 +17,31 @@ L.Icon.Default.mergeOptions({
 });
 
 const Map = () => {
+  const [crs, setCRs] = useState([]); 
+  const [reviews, setReviews] = useState([]); 
+  const [loading, setLoading] = useState(true);
   const position = [14.6396, 121.0786]; 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchCRs() {
+        try {
+            // Use pk in the fetch URL
+            const crRes = await fetch('http://localhost:13000/CRs');
+            const crData = await crRes.json();
+            setCRs(crData);
+
+            const revRes = await fetch('http://localhost:13000/reviews');
+            const allReviews = await revRes.json();
+
+            setLoading(false);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setLoading(false);
+        }
+    }
+    fetchCRs();
+      }, []); // Re-run if the primary key changes
 
   const handleLeaveReviewClick = (crId) => {
     navigate(`/cr/${crId}`); // Navigate to CR review page
@@ -33,50 +56,51 @@ const Map = () => {
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
-        maxZoom={19}
       />
 
-       <Marker 
-      position={[14.639453, 121.076514]}>\
-        <Popup> 
-        <div style={{ width: "300px", fontFamily: "Arial, sans-serif" }}>
-            <h3>Comfort Room Info</h3>
-            <p><strong>Building:</strong> Faura Hall</p>
-            <p><strong>Floor:</strong> 1st Floor</p>
-            <p><strong>CR Availability:</strong> Available</p>
-            <h4>Amenities</h4>
-            <div>
-              <span className="tag tag-working">Toilet Paper Available</span>
-              <span className="tag tag-working">Soap Dispenser Full</span>
-              <span className="tag tag-working">Aircon Broken</span>
-            </div>
-            <button onClick={() => handleLeaveReviewClick("faura-1")}>
-              Leave Review</button>
-          </div>
-        </Popup> 
-      </Marker>
+      {crs.map((cr) => (
+        <Marker 
+          key={cr.id} 
+          position={[cr.latitude, cr.longitude]}
+        >
+          <Popup>
+            <div style={{ width: "250px", fontFamily: "Arial, sans-serif" }}>
+              <h3>{cr.building || "Unknown Building"}</h3>
+              <p><strong>Floor:</strong> {cr.floor || "N/A"}</p>
+              <p><strong>Status:</strong> {cr.status}</p>
 
-       <Marker 
-      position={[14.639427, 121.076953]}>
-        <Popup> 
-        <div style={{ width: "300px", fontFamily: "Arial, sans-serif" }}>
-            <h3>Comfort Room Info</h3>
-            <p><strong>Building:</strong> Faura Hall</p>
-            <p><strong>Floor:</strong> 1st Floor</p>
-            <p><strong>CR Availability:</strong> Available</p>
-            <h4>Amenities</h4>
-            <div>
-              <span className="tag tag-working">Toilet Paper Available</span>
-              <span className="tag tag-working">Soap Dispenser Full</span>
-              <span className="tag tag-working">Aircon Broken</span>
+               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {cr.tags.map((amenity) => (
+                <span
+                  key={amenity}
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    background: '#d4edda'
+
+                  }}
+                >
+                {amenity}
+                </span>
+              ))}
             </div>
-            <button onClick={() => handleLeaveReviewClick("faura-1")}>
-              Leave Review</button>
-          </div></Popup>
-      </Marker>
+              
+              <p>{cr.description}</p>
+
+              <button 
+                className="btn btn-primary btn-sm w-100"
+                onClick={() => handleLeaveReviewClick(cr.id)}
+              >
+                Leave Review
+              </button>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
 };
-
 export default Map;
 

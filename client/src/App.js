@@ -39,9 +39,6 @@ const App = () => {
                 <Link className="nav-link" to="/">Home</Link>
               </li>
               <li className="nav-item">
-                    <Link className="nav-link" to="/profile">Profile</Link>
-              </li>
-              <li className="nav-item">
                     <Link className="nav-link" to="/search">Search</Link>
               </li>
               {!isLoggedIn ? (
@@ -55,6 +52,9 @@ const App = () => {
                 </> 
               ) : (
                 <>
+                  <li className="nav-item">
+                      <Link className="nav-link" to="/profile">Profile</Link>
+                  </li>
                   <li className="nav-item d-flex align-items-center">
                     <span className="navbar-text ms-3 text-white fw-bold me-3">Hello, {username || 'User'}</span>
                   </li>
@@ -74,7 +74,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/cr/:id" element={<CRPage />} /> 
+        <Route path="/cr/:pk" element={<CRPage />} /> 
         
         // added route
         <Route path="/profile/:pk" element={<Profile />} />
