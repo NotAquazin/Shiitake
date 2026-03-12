@@ -1,11 +1,15 @@
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-// 1st parameter is db i initialized in pgAdmin4
-// 3rd parameter is jst the password i set lmfao
-const sequelize = new Sequelize('shiitake', 'postgres', 'october272004', {
-    host: 'localhost',
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: false, // Keeps the terminal clean
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false // This is required for Supabase connections
+        }
+    }
 });
 
 module.exports = sequelize;
