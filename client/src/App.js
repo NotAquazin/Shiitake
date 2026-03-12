@@ -4,7 +4,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Map from "./components/Map";
 import CRPage from "./components/CRPage";
-
+import Profile from "./components/Profile";
 
 const Home = () => {
   return (
@@ -37,6 +37,9 @@ const App = () => {
               <li className="nav-item">
                 <Link className="nav-link" to="/">Home</Link>
               </li>
+              <li className="nav-item">
+                    <Link className="nav-link" to="/profile">Profile</Link>
+                  </li>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item">
@@ -65,6 +68,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} />
+
         <Route path="/cr/:id" element={<CRPage />} /> 
       </Routes>
     </Router>
