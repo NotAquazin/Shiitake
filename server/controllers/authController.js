@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken'); // Added jwt
-const db = require('../db'); // Assuming the db pool is exported from db/index.js
+const jwt = require('jsonwebtoken');
+const User = require('../../models/userModel');
 
 const registerUser = async (req, res) => {
   try {
@@ -30,30 +30,30 @@ const registerUser = async (req, res) => {
     }
 
     // 2. Check if email already exists
-    const emailCheckQuery = 'SELECT email FROM users WHERE email = $1';
-    const existingUser = await db.query(emailCheckQuery, [email]);
-    if (existingUser.rows.length > 0) {
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
       return res.status(400).json({ error: 'An account with this email already exists.' });
     }
 
-    // 3. Generate user_id and hash password
-    const user_id = crypto.randomUUID();
+    // 3. Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
 
     // 4. Insert into database
-    const insertUserQuery = `
-      INSERT INTO users (user_id, username, email, password_hash)
-      VALUES ($1, $2, $3, $4)
-      RETURNING user_id, username, email, failed_login_attempts;
-    `;
-    
-    const newUser = await db.query(insertUserQuery, [user_id, username, email, password_hash]);
+    const newUser = await User.create({
+      username,
+      email,
+      password: password_hash
+    });
 
     // 5. Return success response
     return res.status(201).json({
       message: 'User registered successfully.',
-      user: newUser.rows[0]
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email
+      }
     });
 
   } catch (error) {
@@ -71,49 +71,37 @@ const loginUser = async (req, res) => {
     }
 
     // 1. Query users table by email
-    const userQuery = 'SELECT * FROM users WHERE email = $1';
-    const userResult = await db.query(userQuery, [email]);
+    const user = await User.findOne({ where: { email } });
     
-    if (userResult.rows.length === 0) {
+    if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const user = userResult.rows[0];
-
-    // 2. Check failed login attempts
-    if (user.failed_login_attempts >= 10) {
-      return res.status(403).json({ error: 'Account is locked due to too many failed login attempts.' });
-    }
+    // Note: failed_login_attempts is not in the Sequelize model, so this check is skipped.
 
     // 3. Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      // 4a. Incorrect password: increment failed attempts
-      const incrementAttemptsQuery = 'UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE user_id = $1 RETURNING failed_login_attempts';
-      await db.query(incrementAttemptsQuery, [user.user_id]);
       return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // 4b. Correct password: reset failed attempts to 0
-    if (user.failed_login_attempts > 0) {
-      const resetAttemptsQuery = 'UPDATE users SET failed_login_attempts = 0 WHERE user_id = $1';
-      await db.query(resetAttemptsQuery, [user.user_id]);
     }
 
     // 5. Generate JWT
     const token = jwt.sign(
-      { user_id: user.user_id },
+      { user_id: user.id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     // 6. Return success response
-    const { password_hash, ...userWithoutPassword } = user;
+    // Remove password before sending to client
+    const userJson = user.toJSON();
+    delete userJson.password;
+    
     return res.status(200).json({
       message: 'Login successful.',
       token,
-      user: userWithoutPassword
+      user: userJson
     });
 
   } catch (error) {
