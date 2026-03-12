@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Write a Review</h1>
+    <form id="reviewForm">
+        <label>Rating (1-5):</label><br>
+        <input type="number" id="rating" min="1" max="5" required><br><br>
+        
+        <label>Comment:</label><br>
+        <textarea id="comment" placeholder="How was the experience?"></textarea><br><br>
+        
+        <button type="submit">Submit Review</button>
+    </form>
+    <p id="status"></p>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const crId = urlParams.get('crId');
+
+        document.getElementById('reviewForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const reviewData = {
+                rating: parseInt(document.getElementById('rating').value),
+                comment: document.getElementById('comment').value,
+                // Note: For a real app, you'd also send the UserID of the logged-in user
+                // and the CRID from the URL.
+            };
+
+            const res = await fetch('http://localhost:13000/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reviewData)
+            });
+
+            if (res.ok) {
+                alert("Review Posted!");
+                window.location.href = `cr_page.html?id=${crId}`;
+            } else {
+                document.getElementById('status').innerText = "Error submitting review.";
+            }
+        };
+    </script>
+</body>
+</html>

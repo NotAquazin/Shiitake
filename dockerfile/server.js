@@ -38,17 +38,6 @@ app.use(express.json())
 const cors = require('cors');
 app.use(cors());
 
-// Gets a single user by ID
-app.get('/users/:id', async (req, res) => {
-    try {
-        const user = await User.findByPk(req.params.id);
-        if (user) res.json(user);
-        else res.status(404).json({ error: "User not found" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // ==========================================
 // USER ROUTES
 // ==========================================
@@ -73,6 +62,17 @@ app.get('/users', async (req, res) => {
     }
 });
 
+// Gets a single user by ID
+app.get('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id);
+        if (user) res.json(user);
+        else res.status(404).json({ error: "User not found" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ==========================================
 // CR (RESTROOM) ROUTES
 // ==========================================
@@ -90,6 +90,27 @@ app.get('/crs', async (req, res) => {
     try {
         const crs = await CR.findAll();
         res.status(200).json(crs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET all CRs
+app.get('/crs', async (req, res) => {
+    try {
+        const crs = await CR.findAll();
+        res.json(crs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET a single CR by ID
+app.get('/crs/:id', async (req, res) => {
+    try {
+        const cr = await CR.findByPk(req.params.id);
+        if (cr) res.json(cr);
+        else res.status(404).json({ error: "CR not found" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
