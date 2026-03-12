@@ -1,0 +1,46 @@
+### TEST 1: Create a Valid User
+POST http://localhost:13000/users
+Content-Type: application/json
+
+{
+    "username": "NicoTester",
+    "email": "nico@obf.ateneo.edu",
+    "password": "securePassword123"
+}
+
+### TEST 2: Trigger Duplicate Error (Run this twice!)
+# This proves your 'unique: true' constraint in userModel.js works
+POST http://localhost:13000/users
+Content-Type: application/json
+
+{
+    "username": "NicoTester",
+    "email": "nico@obf.ateneo.edu",
+    "password": "password"
+}
+
+### TEST 3: Trigger Rating Validation
+# This proves your 'validate: { min: 1, max: 5 }' in reviewModel.js works
+POST http://localhost:13000/reviews
+Content-Type: application/json
+
+{
+    "rating": 10,
+    "comment": "This CR is impossibly good!",
+    "reviewTags": ["Clean"]
+}
+
+### TEST 4: Verify Data Retrieval
+GET http://localhost:13000/reviews
+
+### TEST 5: SQL Injection Prevention Test
+# This proves Sequelize sanitizes inputs before sending them to Supabase.
+POST http://localhost:13000/users
+Content-Type: application/json
+
+{
+    "username": "Hacker'; DROP TABLE Users; --",
+    "email": "hacker@evil.com",
+    "password": "password"
+}
+
