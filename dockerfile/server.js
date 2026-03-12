@@ -23,6 +23,12 @@ const User = require('./models/userModel')(sequelize);
 const CR = require('./models/crModel')(sequelize);
 const Review = require('./models/reviewModel')(sequelize);
 
+User.hasMany(Review);
+Review.belongsTo(User);
+
+CR.hasMany(Review);
+Review.belongsTo(CR);
+
 sequelize.sync({ alter: true }) 
   .then(() => {
     console.log('✅ All models were synchronized successfully.');
@@ -33,6 +39,9 @@ sequelize.sync({ alter: true })
 
 const app = express()
 app.use(express.json())
+
+const cors = require('cors');
+app.use(cors());
 
 
 // ==========================================
@@ -54,6 +63,16 @@ app.get('/users', async (req, res) => {
     try {
         const users = await User.findAll(); // Replaces 'SELECT * FROM users'
         res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id);
+        if (user) res.json(user);
+        else res.status(404).json({ error: "User not found" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -81,6 +100,27 @@ app.get('/crs', async (req, res) => {
     }
 });
 
+app.get('/crs', async (req, res) => {
+    try {
+        const crs = await CR.findAll();
+        res.json(crs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/crs/:id', async (req, res) => {
+    try {
+        const cr = await CR.findByPk(req.params.id);
+        if (cr) {
+            res.json(cr);
+        } else {
+            res.status(404).json({ error: "CR not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 // ==========================================
 // REVIEW ROUTES
 // ==========================================

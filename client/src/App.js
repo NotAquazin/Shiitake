@@ -75,6 +75,9 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/cr/:id" element={<CRPage />} /> 
+        
+        // added route
+        <Route path="/profile/:pk" element={<Profile />} />
       </Routes>
     </Router>
   );
