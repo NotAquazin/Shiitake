@@ -7,6 +7,12 @@ module.exports = (sequelize) => {
             autoIncrement: true, primaryKey: true 
         },
 
+        author: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'Anonymous'
+        },
+
         rating: { 
             type: DataTypes.INTEGER, 
             allowNull: false, 
@@ -21,6 +27,18 @@ module.exports = (sequelize) => {
         reviewTags: { 
             type: DataTypes.JSONB, 
             defaultValue: [] 
+        },
+
+        likes: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+
+        dislikes: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
         }
 
     }, {

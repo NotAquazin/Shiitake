@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>User Details</h1>
+    <div id="details">Loading...</div>
+    <a href="all_profiles.html">Back to List</a>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+
+        async function loadProfile() {
+            const res = await fetch(`http://localhost:13000/users/${userId}`);
+            const user = await res.json();
+            document.getElementById('details').innerHTML = `
+                <h2>${user.username}</h2>
+                <p>Email: ${user.email}</p>
+                <p>Role: ${user.role}</p>
+                <p>Joined: ${new Date(user.createdAt).toLocaleDateString()}</p>
+            `;
+        }
+        loadProfile();
+    </script>
+</body>
+</html>
