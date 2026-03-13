@@ -6,8 +6,8 @@ POST http://localhost:13000/users
 Content-Type: application/json
 
 {
-    "username": "Ateaanean123",
-    "email": "studeaant@obf.ateneo.edu",
+    "username": "shouldbeid13",
+    "email": "id13@obf.ateneo.edu",
     "password": "securepassword1",
     "description": "I need the best restrooms on campus.",
     "role": "user"
@@ -41,3 +41,20 @@ Content-Type: application/json
     "comment": "Very clean, water pressure is great!",
     "reviewTags": ["Clean", "Well-lit"]
 }
+
+### Create a new CR Review with like/dislike counts
+POST http://localhost:13000/reviews
+Content-Type: application/json
+
+{
+    "CRId": 15,
+    "author": "HiThereImSquirtle",
+    "rating": 4,
+    "comment": "Good overall, but gets crowded during lunch.",
+    "reviewTags": ["Clean", "Crowded"],
+    "likes": 1,
+    "dislikes": 0
+}
+
+### Get all Reviews
+GET http://localhost:13000/reviews

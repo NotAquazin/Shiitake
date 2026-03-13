@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1 id="cr-name">Loading...</h1>
+    <div id="cr-info"></div>
+    <hr>
+    <a id="review-link" href="#">+ Write a Review for this CR</a><br><br>
+    <a href="all_crs.html">Back to All CRs</a>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const crId = urlParams.get('id');
+
+        async function loadCR() {
+            const res = await fetch(`http://localhost:13000/crs/${crId}`);
+            const cr = await res.json();
+            
+            document.getElementById('cr-name').innerText = cr.name;
+            document.getElementById('cr-info').innerHTML = `
+                <p><strong>Building:</strong> ${cr.building}</p>
+                <p><strong>Floor:</strong> ${cr.floor}</p>
+                <p><strong>Status:</strong> ${cr.status}</p>
+                <p><strong>Avg Rating:</strong> ${cr.averageRating} ⭐</p>
+            `;
+            
+            // Pass the CR ID to the review page so it knows which CR we are reviewing
+            document.getElementById('review-link').href = `cr_review.html?crId=${crId}`;
+        }
+        loadCR();
+    </script>
+</body>
+</html>
