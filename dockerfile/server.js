@@ -1,6 +1,6 @@
 require('dotenv').config();
 const cors = require('cors');
-const authRoutes = require('./routes/authRoutes');
+// const authRoutes = require('./routes/authRoutes');
 
 // Using Sequelize to add models
 const { Sequelize, DataTypes } = require('sequelize');
@@ -36,6 +36,8 @@ sequelize.sync({ alter: true })
 const app = express()
 app.use(express.json())
 app.use(cors());
+
+const authRoutes = require('./routes/authRoutes')(User); 
 app.use('/api/auth', authRoutes);
 
 

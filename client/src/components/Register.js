@@ -44,7 +44,7 @@ const Register = () => {
 
     // 2. Submit to backend
     try {
-      const response = await axios.post('/api/auth/register', {
+      const response = await axios.post('http://localhost:13000/api/auth/register', {
         username,
         email,
         password
