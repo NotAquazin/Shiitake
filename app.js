@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const sequelize = require('./config/database');
@@ -23,18 +24,10 @@ const authRoutes = require('./server/routes/authRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
-// Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, 'client/build')));
-
-// Any other requests not handled by API routes will be caught here and sent to the React app
-app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
 
 // API Route to get all CRs from the database
 app.get('/api/crs', async (req, res) => {
     try {
-        // "include" tells Sequelize to join the Review table
         const crs = await CR.findAll({
             include: [Review] 
         });
@@ -44,12 +37,21 @@ app.get('/api/crs', async (req, res) => {
     }
 });
 
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// Any other requests not handled by API routes will be caught here and sent to the React app
+app.get('/{*splat}', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
 // Start server and sync DB
 const startApp = async () => {
     try {
         // Sync database first, then start listening for requests
-        await sequelize.sync({ alter: true });
-        console.log("✅ Database synced successfully!");
+        // NOTE: Commented out because Supabase's transaction pooler (port 6543) does not support DDL operations like alter/sync and will hang forever.
+        // await sequelize.sync({ alter: true });
+        // console.log("✅ Database synced successfully!");
 
         app.listen(PORT, () => {
             console.log(`🚀 Shiitake server running at http://localhost:${PORT}`);
