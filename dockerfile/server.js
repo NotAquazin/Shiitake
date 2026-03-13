@@ -112,11 +112,8 @@ app.get('/crs', async (req, res) => {
 app.get('/crs/:id', async (req, res) => {
     try {
         const cr = await CR.findByPk(req.params.id);
-        if (cr) {
-            res.json(cr);
-        } else {
-            res.status(404).json({ error: "CR not found" });
-        }
+        if (cr) res.json(cr);
+        else res.status(404).json({ error: "CR not found" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -141,6 +138,70 @@ app.get('/reviews', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/reviews/:id', async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        await review.update({
+            rating: req.body.rating,
+            comment: req.body.comment,
+            reviewTags: Array.isArray(req.body.reviewTags) ? req.body.reviewTags : review.reviewTags,
+            author: req.body.author || review.author
+        });
+
+        return res.status(200).json({ message: 'Review updated successfully!', review });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/reviews/:id', async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        await review.destroy();
+        return res.status(200).json({ message: 'Review deleted successfully!' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.patch('/reviews/:id/vote', async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        const previousVote = req.body.previousVote || null;
+        const nextVote = req.body.nextVote || null;
+
+        let likes = Number(review.likes) || 0;
+        let dislikes = Number(review.dislikes) || 0;
+
+        if (previousVote === 'like') likes = Math.max(0, likes - 1);
+        if (previousVote === 'dislike') dislikes = Math.max(0, dislikes - 1);
+        if (nextVote === 'like') likes += 1;
+        if (nextVote === 'dislike') dislikes += 1;
+
+        await review.update({ likes, dislikes });
+
+        return res.status(200).json({
+            message: 'Vote updated successfully!',
+            review: {
+                id: review.id,
+                likes: review.likes,
+                dislikes: review.dislikes
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
     }
 });
 
