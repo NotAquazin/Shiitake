@@ -6,8 +6,8 @@ POST http://localhost:13000/users
 Content-Type: application/json
 
 {
-    "username": "Ateaanean123",
-    "email": "studeaant@obf.ateneo.edu",
+    "username": "shouldbeid13",
+    "email": "id13@obf.ateneo.edu",
     "password": "securepassword1",
     "description": "I need the best restrooms on campus.",
     "role": "user"
