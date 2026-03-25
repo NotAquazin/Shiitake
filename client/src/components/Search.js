@@ -1,225 +1,183 @@
 import { useState } from 'react';
 import sampleCR from './crData';
-import StarRating from './StarRating';
-import ReviewForm from './ReviewForm';
-import ReviewCard from './ReviewCard';
-import { useParams } from 'react-router-dom';
 
-const CRPage = () => {
-  const { id } = useParams(); // 'faura-1' in this example
+const BUILDINGS = ['Faura Hall', 'CTC', 'SEC-A', 'MVP', 'Arete', 'New Rizal Library'];
+const STATUSES  = ['Available', 'Occupied', 'Closed'];
 
-// The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = 'You'
+function Search() {
 
-  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']
+  // Store what the user typed/selected in the filters
+  const [building,  setBuilding]  = useState('');
+  const [distance,  setDistance]  = useState('');
+  const [floor,     setFloor]     = useState('');
+  const [status,    setStatus]    = useState('');
+  const [amenities, setAmenities] = useState([]);
 
-    const [reviews,       setReviews]       = useState(sampleCR.reviews)
-    const [showForm,      setShowForm]      = useState(false)
-    const [editingReview, setEditingReview] = useState(null)
-    const [sortBy,        setSortBy]        = useState('Newest')
-    const [reported,      setReported]      = useState(new Set())
+  // Store the results to show after clicking Search
+  const [results, setResults] = useState(null);
 
-    // Checks if already posted review
-    const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
-
-    // Average rating across all reviews
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0
-
-    // Sort a copy of reviews (never mutate state directly)
-    const sortedReviews = [...reviews].sort((a, b) => {
-      if (sortBy === 'Newest')        return b.timestamp.localeCompare(a.timestamp)
-      if (sortBy === 'Oldest')        return a.timestamp.localeCompare(b.timestamp)
-      if (sortBy === 'Highest Rated') return b.rating - a.rating
-      if (sortBy === 'Lowest Rated')  return a.rating - b.rating
-      if (sortBy === 'Most Liked')    return b.likes   - a.likes
-      return 0
-    })
-
-  const [inputs, setInputs] = useState({});
-
-  const handleChange = (e) => {
-    const target = e.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
-    setInputs(values => ({...values, [name]: value}))
+  // Toggle an amenity when the user clicks it
+  function toggleAmenity(label) {
+    if (amenities.includes(label)) {
+      // remove it
+      setAmenities(amenities.filter((a) => a !== label));
+    } else {
+      // add it
+      setAmenities([...amenities, label]);
+    }
   }
 
-  const handleSubmit = (event) => {
-    let fillings = '';
-    if (inputs.tomato) fillings += 'tomato';
-    if (inputs.onion) {
-      if (inputs.tomato) fillings += ' and ';
-      fillings += 'onion';
-    }
-    if (fillings == '') fillings = 'no fillings';
-    alert(`${inputs.firstname} wants a burger with ${fillings}`);
-    event.preventDefault();
-  };
-    // Event handlers 
+  // For now, just show sampleCR as the result
+  function handleSearch() {
+    setResults([sampleCR]);
+  }
 
-    function handleSearch() {
-    }
+  return (
+    <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
 
-    // Render
+        {/* Building + Distance */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '14px' }}>
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px', textAlign: 'center' }}>
-        {/* ── Filters ── */}
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Building</label>
+            <select value={building} onChange={(e) => setBuilding(e.target.value)} style={inputStyle}>
+              <option value="">Select building</option>
+              {BUILDINGS.map((b) => (
+                <option key={b}>{b}</option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Distance (m)</label>
+            <input
+              type="number"
+              placeholder="Type valid integer"
+              value={distance}
+              onChange={(e) => setDistance(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
 
-          <div style={{
-            background: '#EDE5D5',
-            borderRadius: '12px',
-            padding: '20px 24px',
-            
-          }}>
+        </div>
 
-            {/* Header row: title + sort dropdown */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
-                Building
-              </h2>
+        {/* Floor + Status */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '14px' }}>
 
-              {/* Only show the sort dropdown if there's more than 1 review */}
-              {reviews.length > 1 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Floor</label>
+            <input
+              type="number"
+              placeholder="Type valid integer"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} style={inputStyle}>
+              <option value="">Select status</option>
+              {STATUSES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+        </div>
+
+        {/* Amenities */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={labelStyle}>Amenities</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+            {sampleCR.amenities.map((amenity) => {
+              const isSelected = amenities.includes(amenity.label);
+              return (
+                <button
+                  key={amenity.label}
+                  onClick={() => toggleAmenity(amenity.label)}
                   style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
                     border: '1px solid #948979',
-                    background: 'white',
+                    fontSize: '12px',
                     cursor: 'pointer',
+                    background: isSelected ? '#153448' : 'white',
+                    color:      isSelected ? 'white'   : '#153448',
                   }}
                 >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              )}
+                  {isSelected ? '✓' : '+'} {amenity.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
-                Distance
-              </h2>
+        {/* Search Button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '32px' }}>
+          <button onClick={handleSearch} style={searchButtonStyle}>
+            Search
+          </button>
+        </div>
 
-              {/* Only show the sort dropdown if there's more than 1 review */}
-              {reviews.length > 1 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #948979',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              )}
+        {/* Results */}
+        {results && results.map((cr) => (
+          <div key={cr.id} style={{ width: '260px', borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
+
+            {/* Card header */}
+            <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+              <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                {cr.building} — Floor {cr.floor}
+              </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
-                Floor
-            </h2>
-
-              {/* Only show the sort dropdown if there's more than 1 review */}
-              {reviews.length > 1 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #948979',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              )}
-
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
-                Status
-              </h2>
-
-              {/* Only show the sort dropdown if there's more than 1 review */}
-              {reviews.length > 1 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #948979',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              )}
+            {/* Card body */}
+            <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+              <p><strong>Building:</strong> {cr.building}</p>
+              <p><strong>Floor:</strong> {cr.floor}</p>
+              <p><strong>Amenities:</strong> {cr.amenities.map((a) => a.label).join(' • ')}</p>
+              <p><strong>Status:</strong> {cr.availability}</p>
             </div>
-
-              {/* Amenities Checkboxes*/}
-              <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
-                Amenities
-              </h2>
-                {sampleCR.amenities.map((amenity) => (
-                    <label>{amenity.label}: 
-                      <input 
-                        type="checkbox" 
-                        name={amenity.label}
-                        checked={inputs[amenity.label]} 
-                        onChange={handleChange}
-                        />
-                      </label>
-                ))}
-
-            <div>
-              <button onClick={() => handleSearch()} style={pillBtn('#e8f5e9', '#2e7d32')}>
-                Search
-              </button>
-            </div>
-
-
 
           </div>
-          
-        </div>
-      </div>
-    )
-};
+        ))}
 
-// returns a style object for the small pill buttons
-function pillBtn(background, color) {
-  return {
-    padding: '3px 10px',
-    fontSize: '11px',
-    fontWeight: '500',
-    border: 'none',
-    borderRadius: '20px',
-    background,
-    color,
-    cursor: 'pointer',
-  }
+      </div>
+    </div>
+  );
 }
 
-export default CRPage;
+const labelStyle = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '700',
+  color: '#555',
+  textTransform: 'uppercase',
+  letterSpacing: '0.07em',
+  marginBottom: '6px',
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '7px 10px',
+  fontSize: '13px',
+  borderRadius: '6px',
+  border: '1px solid #b0a898',
+  background: 'white',
+  color: '#153448',
+  boxSizing: 'border-box',
+};
+
+const searchButtonStyle = {
+  padding: '9px 26px',
+  background: '#3a3a3a',
+  color: 'white',
+  border: 'none',
+  borderRadius: '20px',
+  cursor: 'pointer',
+  fontSize: '13px',
+};
+
+export default Search;
