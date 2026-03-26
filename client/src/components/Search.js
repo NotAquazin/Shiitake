@@ -1,56 +1,83 @@
-import { useState } from 'react';
-import allCRs, { ALL_AMENITIES } from './allCRData';
+import { useState, useEffect } from 'react';
 
-const BUILDINGS = ['Faura Hall', 'CTC', 'SEC-A', 'MVP', 'Arete', 'New Rizal Library'];
-const STATUSES  = ['Available', 'Occupied', 'Closed'];
+const API_URL = 'http://localhost:13000';
+
+const STATUSES = [
+  { value: 'available',         label: 'Available'         },
+  { value: 'under maintenance', label: 'Under Maintenance' },
+  { value: 'closed',            label: 'Closed'            },
+];
 
 function Search() {
 
-  // Store what the user typed/selected in the filters
+  // Filter values
   const [building,  setBuilding]  = useState('');
   const [distance,  setDistance]  = useState('');
   const [floor,     setFloor]     = useState('');
   const [status,    setStatus]    = useState('');
   const [amenities, setAmenities] = useState([]);
+  const [minRating, setMinRating] = useState('');
 
-  // Store the results to show after clicking Search
+  // Options derived from real DB data
+  const [allBuildings, setAllBuildings] = useState([]);
+  const [allTags,      setAllTags]      = useState([]);
+
+  // Search results
   const [results, setResults] = useState(null);
 
-  // Toggle an amenity when the user clicks it
+  // On mount: fetch all CRs once to populate the Building dropdown and tag chips
+  useEffect(() => {
+    fetch(`${API_URL}/crs`)
+      .then((res) => res.json())
+      .then((data) => {
+        const buildings = [...new Set(data.map((cr) => cr.building).filter(Boolean))].sort();
+        const tags = [...new Set(data.flatMap((cr) => Array.isArray(cr.tags) ? cr.tags : []))].sort();
+        setAllBuildings(buildings);
+        setAllTags(tags);
+      })
+      .catch((err) => console.error('Failed to load filter options:', err));
+  }, []);
+
   function toggleAmenity(label) {
     if (amenities.includes(label)) {
-      // remove it
       setAmenities(amenities.filter((a) => a !== label));
     } else {
-      // add it
       setAmenities([...amenities, label]);
     }
   }
 
-  function handleSearch() {
-    let filtered = allCRs;
+  async function handleSearch() {
+    try {
+      const response = await fetch(`${API_URL}/crs`);
+      const data = await response.json();
+      let filtered = data;
 
-    if (building) {
-      filtered = filtered.filter((cr) => cr.building === building);
-    }
-    if (floor !== '') {
-      filtered = filtered.filter((cr) => cr.floor === Number(floor));
-    }
-    if (status) {
-      filtered = filtered.filter((cr) => cr.availability === status);
-    }
-    if (distance !== '') {
-      filtered = filtered.filter((cr) => cr.distance <= Number(distance));
-    }
-    if (amenities.length > 0) {
-      filtered = filtered.filter((cr) =>
-        amenities.every((label) =>
-          cr.amenities.some((a) => a.label === label && a.working)
-        )
-      );
-    }
+      if (building) {
+        filtered = filtered.filter((cr) => cr.building === building);
+      }
+      if (floor !== '') {
+        filtered = filtered.filter((cr) => cr.floor === Number(floor));
+      }
+      if (status) {
+        filtered = filtered.filter((cr) => cr.status === status);
+      }
+      if (amenities.length > 0) {
+        filtered = filtered.filter((cr) => {
+          const crTags = Array.isArray(cr.tags) ? cr.tags : [];
+          return amenities.every((label) => crTags.includes(label));
+        });
+      }
+      if (minRating !== '') {
+        filtered = filtered.filter(
+          (cr) => cr.averageRating > 0 && cr.averageRating >= Number(minRating)
+        );
+      }
 
-    setResults(filtered);
+      setResults(filtered);
+    } catch (err) {
+      console.error('Failed to fetch CRs:', err);
+      setResults([]);
+    }
   }
 
   return (
@@ -64,7 +91,7 @@ function Search() {
             <label style={labelStyle}>Building</label>
             <select value={building} onChange={(e) => setBuilding(e.target.value)} style={inputStyle}>
               <option value="">Select building</option>
-              {BUILDINGS.map((b) => (
+              {allBuildings.map((b) => (
                 <option key={b}>{b}</option>
               ))}
             </select>
@@ -74,16 +101,17 @@ function Search() {
             <label style={labelStyle}>Distance (m)</label>
             <input
               type="number"
-              placeholder="Type valid integer"
+              placeholder="To add one with GPS functionality"
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
-              style={inputStyle}
+              disabled
+              style={{ ...inputStyle, background: '#f0ece6', color: '#aaa', cursor: 'not-allowed' }}
             />
           </div>
 
         </div>
 
-        {/* Floor + Status */}
+        {/* Floor + Status + Min. Rating */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '14px' }}>
 
           <div style={{ flex: 1 }}>
@@ -102,18 +130,30 @@ function Search() {
             <select value={status} onChange={(e) => setStatus(e.target.value)} style={inputStyle}>
               <option value="">Select status</option>
               {STATUSES.map((s) => (
-                <option key={s}>{s}</option>
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
+            </select>
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Minimum Rating</label>
+            <select value={minRating} onChange={(e) => setMinRating(e.target.value)} style={inputStyle}>
+              <option value="">Any</option>
+              <option value="1">&gt; 1★</option>
+              <option value="2">&gt; 2★</option>
+              <option value="3">&gt; 3★</option>
+              <option value="4">&gt; 4★</option>
+              <option value="5">5★ only</option>
             </select>
           </div>
 
         </div>
 
-        {/* Amenities */}
+        {/* Tags */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>Amenities</label>
+          <label style={labelStyle}>Tags</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-            {ALL_AMENITIES.map((label) => {
+            {allTags.map((label) => {
               const isSelected = amenities.includes(label);
               return (
                 <button
@@ -145,28 +185,33 @@ function Search() {
 
         {/* Results */}
         {results && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            {results.map((cr) => (
-              <div key={cr.id} style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
+          results.length === 0
+            ? <p style={{ textAlign: 'center', color: '#777' }}>No CRs match your filters.</p>
+            : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {results.map((cr) => (
+                  <div key={cr.id} style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
 
-                {/* Card header */}
-                <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
-                  <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                    {cr.building} — Floor {cr.floor}
-                  </span>
-                </div>
+                    {/* Card header */}
+                    <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                      <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                        {cr.building} — Floor {cr.floor}
+                      </span>
+                    </div>
 
-                {/* Card body */}
-                <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-                  <p><strong>Building:</strong> {cr.building}</p>
-                  <p><strong>Floor:</strong> {cr.floor}</p>
-                  <p><strong>Amenities:</strong> {cr.amenities.map((a) => a.label).join(' • ')}</p>
-                  <p><strong>Status:</strong> {cr.availability}</p>
-                </div>
+                    {/* Card body */}
+                    <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                      <p><strong>Building:</strong> {cr.building}</p>
+                      <p><strong>Floor:</strong> {cr.floor}</p>
+                      <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
+                      <p><strong>Status:</strong> {cr.status}</p>
+                      <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5` : 'No ratings yet'}</p>
+                    </div>
 
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )
         )}
 
       </div>
