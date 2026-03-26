@@ -2,18 +2,25 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-import Map from "./components/Map";
+import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
 
 const Home = () => {
+  const token = localStorage.getItem('shiitake_token');
+
   return (
     <div className="container mt-5">
-      <h1 className="text-center">Shiitake Interactive Map</h1>
-        <div className="mt-4">
-        <Map/>
+      <h1 className="text-center mb-4">Shiitake CR Navigator</h1>
+      {token ? (
+        <InteractiveMap />
+      ) : (
+        <div className="alert alert-info text-center">
+          <h4>Welcome to the Ateneo CR Navigator!</h4>
+          <p>Please <Link to="/login">Login</Link> or <Link to="/register">Register</Link> to view the interactive map.</p>
         </div>
+      )}
     </div>
   );
 };
@@ -76,7 +83,7 @@ const App = () => {
         <Route path="/search" element={<Search />} />
         <Route path="/cr/:pk" element={<CRPage />} /> 
         
-        // added route
+        {/* added route */}
         <Route path="/profile/:pk" element={<Profile />} />
       </Routes>
     </Router>
