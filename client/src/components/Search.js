@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import sampleCR from './crData';
+import allCRs, { ALL_AMENITIES } from './allCRData';
 
 const BUILDINGS = ['Faura Hall', 'CTC', 'SEC-A', 'MVP', 'Arete', 'New Rizal Library'];
 const STATUSES  = ['Available', 'Occupied', 'Closed'];
@@ -27,9 +27,30 @@ function Search() {
     }
   }
 
-  // For now, just show sampleCR as the result
   function handleSearch() {
-    setResults([sampleCR]);
+    let filtered = allCRs;
+
+    if (building) {
+      filtered = filtered.filter((cr) => cr.building === building);
+    }
+    if (floor !== '') {
+      filtered = filtered.filter((cr) => cr.floor === Number(floor));
+    }
+    if (status) {
+      filtered = filtered.filter((cr) => cr.availability === status);
+    }
+    if (distance !== '') {
+      filtered = filtered.filter((cr) => cr.distance <= Number(distance));
+    }
+    if (amenities.length > 0) {
+      filtered = filtered.filter((cr) =>
+        amenities.every((label) =>
+          cr.amenities.some((a) => a.label === label && a.working)
+        )
+      );
+    }
+
+    setResults(filtered);
   }
 
   return (
@@ -92,12 +113,12 @@ function Search() {
         <div style={{ marginBottom: '20px' }}>
           <label style={labelStyle}>Amenities</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-            {sampleCR.amenities.map((amenity) => {
-              const isSelected = amenities.includes(amenity.label);
+            {ALL_AMENITIES.map((label) => {
+              const isSelected = amenities.includes(label);
               return (
                 <button
-                  key={amenity.label}
-                  onClick={() => toggleAmenity(amenity.label)}
+                  key={label}
+                  onClick={() => toggleAmenity(label)}
                   style={{
                     padding: '4px 12px',
                     borderRadius: '20px',
@@ -108,7 +129,7 @@ function Search() {
                     color:      isSelected ? 'white'   : '#153448',
                   }}
                 >
-                  {isSelected ? '✓' : '+'} {amenity.label}
+                  {isSelected ? '✓' : '+'} {label}
                 </button>
               );
             })}
@@ -123,26 +144,30 @@ function Search() {
         </div>
 
         {/* Results */}
-        {results && results.map((cr) => (
-          <div key={cr.id} style={{ width: '260px', borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
+        {results && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            {results.map((cr) => (
+              <div key={cr.id} style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
 
-            {/* Card header */}
-            <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
-              <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                {cr.building} — Floor {cr.floor}
-              </span>
-            </div>
+                {/* Card header */}
+                <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                  <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                    {cr.building} — Floor {cr.floor}
+                  </span>
+                </div>
 
-            {/* Card body */}
-            <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-              <p><strong>Building:</strong> {cr.building}</p>
-              <p><strong>Floor:</strong> {cr.floor}</p>
-              <p><strong>Amenities:</strong> {cr.amenities.map((a) => a.label).join(' • ')}</p>
-              <p><strong>Status:</strong> {cr.availability}</p>
-            </div>
+                {/* Card body */}
+                <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                  <p><strong>Building:</strong> {cr.building}</p>
+                  <p><strong>Floor:</strong> {cr.floor}</p>
+                  <p><strong>Amenities:</strong> {cr.amenities.map((a) => a.label).join(' • ')}</p>
+                  <p><strong>Status:</strong> {cr.availability}</p>
+                </div>
 
+              </div>
+            ))}
           </div>
-        ))}
+        )}
 
       </div>
     </div>
