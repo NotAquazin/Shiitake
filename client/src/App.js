@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-import Map from "./components/Map";
+import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
@@ -83,7 +83,7 @@ const App = () => {
         <Route path="/search" element={<Search />} />
         <Route path="/cr/:pk" element={<CRPage />} /> 
         
-        // added route
+        {/* added route */}
         <Route path="/profile/:pk" element={<Profile />} />
       </Routes>
     </Router>
