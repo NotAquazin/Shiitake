@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>All Users</h1>
+    <nav><a href="create.html">Create New Profile<br><br></a></nav>
+    <div id="user-list">Loading users...</div>
+
+    <script>
+        async function loadUsers() {
+            const response = await fetch('http://localhost:13000/users');
+            const users = await response.json();
+            const listDiv = document.getElementById('user-list');
+            listDiv.innerHTML = users.map(user => `
+                <p>
+                    <a href="profile.html?id=${user.id}">${user.username}</a> 
+                    (${user.email})
+                </p>
+            `).join('');
+        }
+        loadUsers();
+    </script>
+</body>
+</html>

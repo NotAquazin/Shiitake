@@ -17,4 +17,4 @@ COPY . .
 # Documents the ports that the docer is expected to listen on when it's ran 
 EXPOSE 3000
 
-CMD ["npm","run","dev"]
+CMD ["npm", "start"]

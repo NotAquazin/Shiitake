@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Create Profile</h1>
+    <form id="userForm">
+        <input type="text" id="username" placeholder="Username" required><br>
+        <input type="email" id="email" placeholder="Email" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <button type="submit">Register</button>
+    </form>
+    <p id="msg"></p>
+
+    <script>
+        document.getElementById('userForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            const res = await fetch('http://localhost:13000/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert("Success!");
+                window.location.href = "all_profiles.html";
+            } else {
+                document.getElementById('msg').innerText = "Error: Email/Username taken";
+            }
+        };
+    </script>
+</body>
+</html>

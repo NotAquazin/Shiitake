@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Write a Review</h1>
+    <form id="reviewForm">
+        <label>Rating (1-5):</label><br>
+        <input type="number" id="rating" min="1" max="5" required><br><br>
+        
+        <label>Comment:</label><br>
+        <textarea id="comment" placeholder="How was the experience?"></textarea><br><br>
+        
+        <button type="submit">Submit Review</button>
+    </form>
+    <p id="status"></p>
+
+    <hr>
+    <h2>CR Review Test Cases</h2>
+
+    <button id="tc-create">TC1: Create Review</button>
+    <button id="tc-get">TC2: Get Reviews</button>
+    <button id="tc-like">TC3: Like</button>
+    <button id="tc-undo-like">TC4: Undo Like</button>
+    <button id="tc-delete">TC5: Delete Review</button>
+
+    <pre id="testOutput" style="margin-top: 12px; background: #f6f8fa; border: 1px solid #ddd; padding: 10px; white-space: pre-wrap;">Run Create first.
+</pre>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const crId = urlParams.get('crId');
+        let testReviewId = null;
+
+        function addLine(text) {
+            const out = document.getElementById('testOutput');
+            out.textContent += text + "\n";
+        }
+
+        document.getElementById('reviewForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const reviewData = {
+                rating: parseInt(document.getElementById('rating').value),
+                comment: document.getElementById('comment').value,
+                // Note: For a real app, you'd also send the UserID of the logged-in user
+                // and the CRID from the URL.
+            };
+
+            const res = await fetch('http://localhost:13000/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reviewData)
+            });
+
+            if (res.ok) {
+                alert("Review Posted!");
+                window.location.href = `cr_page.html?id=${crId}`;
+            } else {
+                document.getElementById('status').innerText = "Error submitting review.";
+            }
+        };
+
+        document.getElementById('tc-create').onclick = async () => {
+            if (!crId) {
+                addLine('TC1 failed: no crId in URL');
+                return;
+            }
+
+            const payload = {
+                CRId: Number(crId),
+                author: 'You',
+                rating: 5,
+                comment: 'TC review create',
+                reviewTags: ['Clean'],
+                likes: 0,
+                dislikes: 0
+            };
+
+            const res = await fetch('http://localhost:13000/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (err) {
+                addLine('error: ' + err);
+            }
+
+            if (!res.ok || !data || !data.review || !data.review.id) {
+                addLine('TC1 failed (' + res.status + '): ' + JSON.stringify(data));
+                return;
+            }
+
+            testReviewId = data.review.id;
+            addLine('TC1 passed: created review id ' + testReviewId);
+        };
+
+        document.getElementById('tc-get').onclick = async () => {
+            const res = await fetch('http://localhost:13000/reviews');
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (err) {
+                addLine('error: ' + err);
+            }
+
+            if (!res.ok || !Array.isArray(data)) {
+                addLine('TC2 failed: get reviews request failed');
+                return;
+            }
+
+            let count = data.length;
+            if (crId) {
+                count = data.filter((r) => String(r.CRId) === String(crId)).length;
+            }
+            addLine('TC2 passed: found ' + count + ' review(s)');
+        };
+
+        document.getElementById('tc-like').onclick = async () => {
+            const res = await fetch(`http://localhost:13000/reviews/${testReviewId}/vote`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ previousVote: null, nextVote: 'like' })
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (err) {
+                addLine('error: ' + err);
+            }
+
+            if (!res.ok) {
+                addLine('TC3 failed: like request failed');
+                return;
+            }
+            addLine('TC3 passed: like applied');
+            if (data && data.review) {
+                addLine('likes=' + data.review.likes + ', dislikes=' + data.review.dislikes);
+            }
+        };
+
+        document.getElementById('tc-undo-like').onclick = async () => {
+            const res = await fetch(`http://localhost:13000/reviews/${testReviewId}/vote`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ previousVote: 'like', nextVote: null })
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (err) {
+                addLine('error: ' + err);
+            }
+
+            if (!res.ok) {
+                addLine('TC4 failed: undo like request failed');
+                return;
+            }
+            addLine('TC4 passed: undo like worked');
+            if (data && data.review) {
+                addLine('likes=' + data.review.likes + ', dislikes=' + data.review.dislikes);
+            }
+        };
+
+        document.getElementById('tc-delete').onclick = async () => {
+            const res = await fetch(`http://localhost:13000/reviews/${testReviewId}`, {
+                method: 'DELETE'
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (err) {
+                addLine('error: ' + err);
+            }
+
+            if (!res.ok) {
+                addLine('TC5 failed: delete failed');
+                return;
+            }
+
+            testReviewId = null;
+            addLine('TC5 passed: review deleted');
+        };
+    </script>
+</body>
+</html>

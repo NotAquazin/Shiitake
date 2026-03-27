@@ -3,15 +3,22 @@ import StarRating from './StarRating'
 
 function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
 
+  const initialAmenities = Array.isArray(existingReview?.amenities)
+    ? existingReview.amenities
+    : Array.isArray(cr?.amenities)
+      ? cr.amenities
+      : []
+
   // pre-fill if editing, otherwise start blank
   const [rating, setRating] = useState(existingReview ? existingReview.rating : 0)
   const [text, setText] = useState(existingReview ? existingReview.text : '')
-  const [amenities, setAmenities] = useState(existingReview ? existingReview.amenities : cr.amenities)
+  const [amenities, setAmenities] = useState(initialAmenities)
   const [error, setError] = useState('')
 
   // flip the working status of whichever amenity was clicked
   function toggleAmenity(index) {
-    const updated = amenities.map((amenity, i) => {
+    const sourceAmenities = Array.isArray(amenities) ? amenities : []
+    const updated = sourceAmenities.map((amenity, i) => {
       if (i === index) {
         return { ...amenity, working: !amenity.working }
       }
@@ -54,7 +61,7 @@ function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
       <div style={{ marginBottom: '16px' }}>
         <label style={labelStyle}>Update Amenity Status (click to toggle)</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {amenities.map((amenity, index) => (
+          {(Array.isArray(amenities) ? amenities : []).map((amenity, index) => (
             <button
               key={amenity.label}
               onClick={() => toggleAmenity(index)}

@@ -4,28 +4,78 @@
 // sortBy - how reviews are sorted
 // reported - Set of review IDs that have been reported (hides them)
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import sampleCR from './crData';
 import StarRating from './StarRating';
 import ReviewForm from './ReviewForm';
 import ReviewCard from './ReviewCard';
 import { useParams } from 'react-router-dom';
 
+const API_BASE = 'http://localhost:13000';
+
 const CRPage = () => {
-  const { id } = useParams(); // 'faura-1' in this example
+  const { pk } = useParams(); // 'faura-1' in this example
+  const [cr, setCR] = useState({
+    building: '',
+    floor: '',
+    status: '',
+    tags: []
+  });
+  const [reviews, setReviews] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const [showForm,      setShowForm]      = useState(false)
+  const [editingReview, setEditingReview] = useState(null)
+  const [sortBy,        setSortBy]        = useState('Newest')
+  const [reported,      setReported]      = useState(new Set())
+  const [userVotes,     setUserVotes]     = useState({})
+
+  function getReviewId(review) {
+    return review?.pk ?? review?.id
+  }
+
+  function mapReviewFromApi(review) {
+    return {
+      ...review,
+      id: getReviewId(review),
+      author: review.author || 'Anonymous',
+      text: review.text ?? review.comment ?? '',
+      timestamp: review.timestamp ?? (review.createdAt ? review.createdAt.split('T')[0] : ''),
+      likes: review.likes ?? 0,
+      dislikes: review.dislikes ?? 0,
+      amenities: Array.isArray(review.reviewTags) ? review.reviewTags : [],
+    }
+  }
+
+  useEffect(() => {
+    async function loadCR() {
+        try {
+            // Use pk in the fetch URL
+            const crRes = await fetch(`${API_BASE}/CRs/${pk}`);
+            const crData = await crRes.json();
+            setCR(crData);
+            console.log(crData);
+
+            const revRes = await fetch(`${API_BASE}/reviews`);
+            const allReviews = await revRes.json();
+
+            // Filter reviews using the primary key
+            const pkNumber = Number(pk);
+            const myReviews = allReviews.filter((r) => r.CRId === pkNumber || String(r.CRId) === String(pk)).map(mapReviewFromApi);
+            setReviews(myReviews);
+
+            setLoading(false);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setLoading(false);
+        }
+    }
+    loadCR();
+      }, [pk]); // Re-run if the primary key changes
 
 // The logged-in user's name. Replace with real auth later.
   const CURRENT_USER = 'You'
 
-  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']
-
-
-    const [reviews,       setReviews]       = useState(sampleCR.reviews)
-    const [showForm,      setShowForm]      = useState(false)
-    const [editingReview, setEditingReview] = useState(null)
-    const [sortBy,        setSortBy]        = useState('Newest')
-    const [reported,      setReported]      = useState(new Set())
+  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
     // Checks if already posted review
     const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
@@ -37,8 +87,8 @@ const CRPage = () => {
 
     // Sort a copy of reviews (never mutate state directly)
     const sortedReviews = [...reviews].sort((a, b) => {
-      if (sortBy === 'Newest')        return b.timestamp.localeCompare(a.timestamp)
-      if (sortBy === 'Oldest')        return a.timestamp.localeCompare(b.timestamp)
+      if (sortBy === 'Newest')        return b.createdAt.localeCompare(a.createdAt)
+      if (sortBy === 'Oldest')        return a.createdAt.localeCompare(b.createdAt)
       if (sortBy === 'Highest Rated') return b.rating - a.rating
       if (sortBy === 'Lowest Rated')  return a.rating - b.rating
       if (sortBy === 'Most Liked')    return b.likes   - a.likes
@@ -47,28 +97,105 @@ const CRPage = () => {
 
     // Event handlers 
 
-    function handleSubmitReview(reviewData) {
-      if (editingReview) {
-        // Replace the old review with the edited one
-        setReviews(reviews.map((r) => r.id === reviewData.id ? reviewData : r))
-      } else {
-        // Add the new review to the front of the list
-        setReviews([reviewData, ...reviews])
+    async function handleSubmitReview(reviewData) {
+      try {
+        if (editingReview) {
+          const response = await fetch(`${API_BASE}/reviews/${getReviewId(editingReview)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              rating: reviewData.rating,
+              comment: reviewData.text,
+              reviewTags: reviewData.amenities,
+              author: reviewData.author,
+            }),
+          })
+
+          if (!response.ok) throw new Error('Failed to update review')
+
+          const data = await response.json()
+          const updated = mapReviewFromApi(data.review)
+          setReviews((prev) => prev.map((r) => (getReviewId(r) === getReviewId(updated) ? updated : r)))
+        } else {
+          const response = await fetch(`${API_BASE}/reviews`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              CRId: cr.id ?? Number(pk),
+              rating: reviewData.rating,
+              comment: reviewData.text,
+              reviewTags: reviewData.amenities,
+              author: reviewData.author,
+            }),
+          })
+
+          if (!response.ok) throw new Error('Failed to create review')
+
+          const data = await response.json()
+          const created = mapReviewFromApi(data.review)
+          setReviews((prev) => [created, ...prev])
+        }
+
+        setShowForm(false)
+        setEditingReview(null)
+      } catch (error) {
+        console.error(error)
+        alert('Could not save review. Please try again.')
       }
-      setShowForm(false)
-      setEditingReview(null)
+    }
+
+    async function applyVote(reviewId, nextVote) {
+      const prevVote = userVotes[reviewId]
+      if (prevVote === nextVote) return
+
+      try {
+        const response = await fetch(`${API_BASE}/reviews/${reviewId}/vote`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ previousVote: prevVote, nextVote }),
+        })
+
+        if (!response.ok) throw new Error('Failed to update vote')
+
+        const data = await response.json()
+        const nextLikes = data.review?.likes ?? 0
+        const nextDislikes = data.review?.dislikes ?? 0
+
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            getReviewId(review) === reviewId
+              ? { ...review, likes: nextLikes, dislikes: nextDislikes }
+              : review
+          )
+        )
+
+        setUserVotes((prev) => {
+          const updated = { ...prev }
+
+          if (nextVote) {
+            updated[reviewId] = nextVote
+          }
+
+          if (!nextVote) {
+            delete updated[reviewId]
+          }
+
+          return updated
+        })
+      } catch (error) {
+        console.error(error)
+        alert('Could not update vote. Please try again.')
+      }
     }
 
     function handleLike(reviewId) {
-      setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, likes: r.likes + 1 } : r
-      ))
+      const currentVote = userVotes[reviewId]
+      applyVote(reviewId, currentVote === 'like' ? null : 'like')
     }
 
     function handleDislike(reviewId) {
-      setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, dislikes: r.dislikes + 1 } : r
-      ))
+      const currentVote = userVotes[reviewId]
+      applyVote(reviewId, currentVote === 'dislike' ? null : 'dislike')
     }
 
     function handleEdit(review) {
@@ -76,9 +203,20 @@ const CRPage = () => {
       setShowForm(true)
     }
 
-    function handleDelete(reviewId) {
+    async function handleDelete(reviewId) {
       if (window.confirm('Delete your review?')) {
-        setReviews(reviews.filter((r) => r.id !== reviewId))
+        try {
+          const response = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+            method: 'DELETE',
+          })
+
+          if (!response.ok) throw new Error('Failed to delete review')
+
+          setReviews((prev) => prev.filter((r) => getReviewId(r) !== reviewId))
+        } catch (error) {
+          console.error(error)
+          alert('Could not delete review. Please try again.')
+        }
       }
     }
 
@@ -112,7 +250,7 @@ const CRPage = () => {
             color: 'white',
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {sampleCR.building} Hall — Floor {sampleCR.floor}
+              {cr.building} — Floor {cr.floor}
             </h1>
 
             {/* Availability badge */}
@@ -122,10 +260,10 @@ const CRPage = () => {
               borderRadius: '20px',
               fontSize: '12px',
               fontWeight: '600',
-              background: sampleCR.availability === 'Available' ? '#4CAF50' : '#e53935',
+              background: cr.status === 'available' ? '#4CAF50' : '#e53935',
               marginBottom: '12px',
             }}>
-              {sampleCR.availability}
+              {cr.status}
             </span>
 
             {/* Average rating */}
@@ -141,19 +279,19 @@ const CRPage = () => {
               Amenities
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {sampleCR.amenities.map((amenity) => (
+              {cr.tags.map((amenity) => (
                 <span
-                  key={amenity.label}
+                  key={amenity}
                   style={{
                     padding: '3px 10px',
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: '500',
-                    background: amenity.working ? '#d4edda' : '#f8d7da',
-                    color:      amenity.working ? '#155724' : '#721c24',
+                    background: '#d4edda'
+
                   }}
                 >
-                  {amenity.working ? '✓' : '✗'} {amenity.label}
+                {amenity}
                 </span>
               ))}
             </div>
@@ -217,7 +355,7 @@ const CRPage = () => {
             {/* The review form — only shown when showForm is true */}
             {showForm && (
               <ReviewForm
-                cr={sampleCR}
+                cr={cr}
                 existingReview={editingReview}
                 onSubmit={handleSubmitReview}
                 onCancel={() => {
@@ -235,12 +373,13 @@ const CRPage = () => {
             ) : (
               sortedReviews
                 // Hide reported reviews
-                .filter((r) => !reported.has(r.id))
+                .filter((r) => !reported.has(getReviewId(r)))
                 .map((review) => (
                   <ReviewCard
-                    key={review.id}
+                    key={getReviewId(review)}
                     review={review}
                     currentUser={CURRENT_USER}
+                    currentVote={userVotes[getReviewId(review)] || null}
                     onLike={handleLike}
                     onDislike={handleDislike}
                     onEdit={handleEdit}
