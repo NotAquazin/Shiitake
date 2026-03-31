@@ -81,9 +81,7 @@ const CRPage = () => {
     const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
 
     // Average rating across all reviews
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0
+    const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
 
     // Sort a copy of reviews (never mutate state directly)
     const sortedReviews = [...reviews].sort((a, b) => {

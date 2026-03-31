@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const API_URL = 'http://localhost:13000';
 
@@ -101,7 +102,7 @@ function Search() {
             <label style={labelStyle}>Distance (m)</label>
             <input
               type="number"
-              placeholder="To add one with GPS functionality"
+              placeholder="To add with GPS functionality"
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
               disabled
@@ -139,10 +140,10 @@ function Search() {
             <label style={labelStyle}>Minimum Rating</label>
             <select value={minRating} onChange={(e) => setMinRating(e.target.value)} style={inputStyle}>
               <option value="">Any</option>
-              <option value="1">&gt; 1★</option>
-              <option value="2">&gt; 2★</option>
-              <option value="3">&gt; 3★</option>
-              <option value="4">&gt; 4★</option>
+              <option value="1">&ge; 1★</option>
+              <option value="2">&ge; 2★</option>
+              <option value="3">&ge; 3★</option>
+              <option value="4">&ge; 4★</option>
               <option value="5">5★ only</option>
             </select>
           </div>
@@ -186,29 +187,31 @@ function Search() {
         {/* Results */}
         {results && (
           results.length === 0
-            ? <p style={{ textAlign: 'center', color: '#777' }}>No CRs match your filters.</p>
+            ? <p style={{ textAlign: 'center', color: '#777' }}>No CR matches found</p>
             : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {results.map((cr) => (
-                  <div key={cr.id} style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)' }}>
+                  <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
 
-                    {/* Card header */}
-                    <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
-                      <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                        {cr.building} — Floor {cr.floor}
-                      </span>
+                      {/* Card header */}
+                      <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                        <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                          {cr.building} — Floor {cr.floor}
+                        </span>
+                      </div>
+
+                      {/* Card body */}
+                      <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                        <p><strong>Building:</strong> {cr.building}</p>
+                        <p><strong>Floor:</strong> {cr.floor}</p>
+                        <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
+                        <p><strong>Status:</strong> {cr.status}</p>
+                        <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+                      </div>
+
                     </div>
-
-                    {/* Card body */}
-                    <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-                      <p><strong>Building:</strong> {cr.building}</p>
-                      <p><strong>Floor:</strong> {cr.floor}</p>
-                      <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
-                      <p><strong>Status:</strong> {cr.status}</p>
-                      <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5` : 'No ratings yet'}</p>
-                    </div>
-
-                  </div>
+                  </Link>
                 ))}
               </div>
             )
