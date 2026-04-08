@@ -27,11 +27,13 @@ const Home = () => {
 
 const App = () => {
   const username = localStorage.getItem('shiitake_username');
+  const userID = localStorage.getItem('shiitake_userID');
   const isLoggedIn = !!localStorage.getItem('shiitake_token');
 
   const handleLogout = () => {
     localStorage.removeItem('shiitake_token');
     localStorage.removeItem('shiitake_username');
+    localStorage.removeItem('shiitake_userID');
     window.location.href = '/login'; // Redirect to login
   };
 
@@ -60,7 +62,7 @@ const App = () => {
               ) : (
                 <>
                   <li className="nav-item">
-                      <Link className="nav-link" to="/profile">Profile</Link>
+                      <Link className="nav-link" to={`/profile/${userID}`}>Profile</Link>
                   </li>
                   <li className="nav-item d-flex align-items-center">
                     <span className="navbar-text ms-3 text-white fw-bold me-3">Hello, {username || 'User'}</span>
@@ -79,12 +81,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:pk" element={<Profile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/cr/:pk" element={<CRPage />} /> 
-        
-        {/* added route */}
-        <Route path="/profile/:pk" element={<Profile />} />
       </Routes>
     </Router>
   );

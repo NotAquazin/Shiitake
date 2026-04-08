@@ -25,7 +25,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
         <StarRating rating={review.rating} interactive={false} />
       </div>
 
-      {/* review text — only renders if there is text */}
+      {/* review text, only renders if there is text */}
       {review.text && (
         <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#444', lineHeight: '1.6' }}>
           {review.text}
@@ -52,7 +52,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
         {/* pushes edit/delete/report to the right */}
         <div style={{ flex: 1 }} />
 
-        {/* your own review — show edit and delete */}
+        {/* your own review, show edit and delete */}
         {isMyReview && (
           <>
             <button onClick={() => onEdit(review)} style={pillBtn('#e3f2fd', '#1565c0')}>
@@ -64,7 +64,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
           </>
         )}
 
-        {/* someone else's review — show report */}
+        {/* someone else's review, show report */}
         {!isMyReview && (
           <button onClick={() => onReport(reviewId)} style={pillBtn('#fff3e0', '#e65100')}>
             Report
