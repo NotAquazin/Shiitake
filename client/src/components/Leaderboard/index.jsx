@@ -8,6 +8,7 @@
 //   sortBy        - how the list is sorted
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 import LeaderboardRow  from './components/LeaderboardRow'
@@ -27,6 +28,7 @@ function countActiveFilters(filters) {
 }
 
 export default function Leaderboard() {
+  const navigate = useNavigate()
 
   const [restrooms,     setRestrooms]     = useState([])
   const [filtered,      setFiltered]      = useState([])
@@ -56,6 +58,7 @@ export default function Leaderboard() {
             const sum = crReviews.reduce((acc, curr) => acc + curr.rating, 0);
             calculatedRating = sum / crReviews.length;
           }
+          calculatedRating = parseFloat(Number(calculatedRating).toFixed(1));
 
           return {
             id: cr.id,
@@ -118,8 +121,7 @@ export default function Leaderboard() {
   }
 
   function handleRowClick(restroom) {
-    // Placeholder — would navigate to the CR detail / review page
-    alert(`Viewing ${restroom.code} — ${restroom.buildingName}, Floor ${restroom.floor}`)
+    navigate(`/cr/${restroom.id}`)
   }
 
   function handleClickFilter() {
