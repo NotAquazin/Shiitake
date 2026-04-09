@@ -311,7 +311,7 @@ const CRPage = () => {
               <p style={{ margin: '0 0 4px', fontSize: '12px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Average Rating ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
               </p>
-              <StarRating rating={Math.round(avgRating)} interactive={false} />
+              <StarRating rating={avgRating} interactive={false} />
             </div>
 
             {/* Amenities */}
