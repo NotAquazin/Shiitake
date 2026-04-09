@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import StarRating from './StarRating'
 
-function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
+function ReviewForm({ cr, existingReview, onSubmit, onCancel, onAmenityChange }) {
 
   function buildInitialAmenities() {
     if (Array.isArray(existingReview?.amenities) && existingReview.amenities.length > 0) {
@@ -45,6 +45,7 @@ function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
       return amenity
     })
     setAmenities(updated)
+    onAmenityChange?.(updated)
   }
 
   function handleSubmit() {

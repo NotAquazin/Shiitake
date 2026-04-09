@@ -37,6 +37,7 @@
       "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js"
     }
   },
+  "proxy": "http://localhost:13000",
   "browserslist": {
     "production": [
       ">0.2%",
