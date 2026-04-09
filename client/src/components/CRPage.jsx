@@ -29,6 +29,9 @@ const CRPage = () => {
   const [reported,      setReported]      = useState(new Set())
   const [userVotes,     setUserVotes]     = useState({})
 
+  const currentUsername = localStorage.getItem('shiitake_username') || 'Anonymous';
+  const currentUserId = localStorage.getItem('shiitake_userID')
+
   function getReviewId(review) {
     return review?.pk ?? review?.id
   }
@@ -73,7 +76,7 @@ const CRPage = () => {
       }, [pk]); // Re-run if the primary key changes
 
 // The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = 'You'
+  const CURRENT_USER = currentUsername
 
   const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
@@ -120,10 +123,11 @@ const CRPage = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               CRId: cr.id ?? Number(pk),
+              UserId: currentUserId ? Number(currentUserId) : null,
               rating: reviewData.rating,
               comment: reviewData.text,
               reviewTags: reviewData.amenities,
-              author: reviewData.author,
+              author: currentUsername,
             }),
           })
 
@@ -248,7 +252,7 @@ const CRPage = () => {
             color: 'white',
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {cr.building} — Floor {cr.floor}
+              {cr.building} — {cr.name}
             </h1>
 
             {/* Availability badge */}
