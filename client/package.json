@@ -10,6 +10,7 @@
     "axios": "^1.13.5",
     "bootstrap": "^5.3.8",
     "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-leaflet": "^5.0.0",
@@ -20,7 +21,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false",
+    "test:coverage": "react-scripts test --watchAll=false --coverage",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -29,6 +31,18 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      "^sequelize$": "<rootDir>/../node_modules/sequelize/lib/index.js",
+      "^bcrypt$": "<rootDir>/../node_modules/bcrypt/bcrypt.js",
+      "^jsonwebtoken$": "<rootDir>/../node_modules/jsonwebtoken/index.js",
+      "^pg$": "<rootDir>/../node_modules/pg/lib/index.js"
+    }
+  },
+  "proxy": "http://localhost:13000",
   "browserslist": {
     "production": [
       ">0.2%",

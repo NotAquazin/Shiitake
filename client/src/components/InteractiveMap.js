@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import './InteractiveMap.css'; // We'll create a simple CSS file for map height and styles
+import './InteractiveMap.css';
 
 const InteractiveMap = () => {
   const [crs, setCrs] = useState([]);
@@ -89,6 +89,12 @@ const InteractiveMap = () => {
               <button>Leave Review</button>
           </div>
       `).openPopup();
+      
+      //Cleanup function to remove map on unmount
+      return () => {
+        map.remove();
+        mapRef.current = null;
+      };
     }
   }, []);
 
