@@ -1,6 +1,6 @@
 import StarRating from './StarRating'
 
-function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdit, onDelete, onReport }) {
+function ReviewCard({ review, currentUser, currentVote, isLoggedIn, onLike, onDislike, onEdit, onDelete, onReport }) {
 
   const reviewId = review?.pk ?? review?.id
   const likes = review?.likes ?? 0
@@ -25,7 +25,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
         <StarRating rating={review.rating} interactive={false} />
       </div>
 
-      {/* review text — only renders if there is text */}
+      {/* review text, only renders if there is text */}
       {review.text && (
         <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#444', lineHeight: '1.6' }}>
           {review.text}
@@ -37,14 +37,26 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
 
         <button
           onClick={() => onLike(reviewId)}
-          style={pillBtn(currentVote === 'like' ? '#c8e6c9' : '#e8f5e9', '#2e7d32')}
+          disabled={!isLoggedIn}
+          title={!isLoggedIn ? 'Log in to vote' : undefined}
+          style={{
+            ...pillBtn(currentVote === 'like' ? '#c8e6c9' : '#e8f5e9', '#2e7d32'),
+            opacity: isLoggedIn ? 1 : 0.5,
+            cursor: isLoggedIn ? 'pointer' : 'not-allowed',
+          }}
         >
           👍 {likes}
         </button>
 
         <button
           onClick={() => onDislike(reviewId)}
-          style={pillBtn(currentVote === 'dislike' ? '#ffcdd2' : '#fce4ec', '#c62828')}
+          disabled={!isLoggedIn}
+          title={!isLoggedIn ? 'Log in to vote' : undefined}
+          style={{
+            ...pillBtn(currentVote === 'dislike' ? '#ffcdd2' : '#fce4ec', '#c62828'),
+            opacity: isLoggedIn ? 1 : 0.5,
+            cursor: isLoggedIn ? 'pointer' : 'not-allowed',
+          }}
         >
           👎 {dislikes}
         </button>
@@ -52,7 +64,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
         {/* pushes edit/delete/report to the right */}
         <div style={{ flex: 1 }} />
 
-        {/* your own review — show edit and delete */}
+        {/* your own review, show edit and delete */}
         {isMyReview && (
           <>
             <button onClick={() => onEdit(review)} style={pillBtn('#e3f2fd', '#1565c0')}>
@@ -64,7 +76,7 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
           </>
         )}
 
-        {/* someone else's review — show report */}
+        {/* someone else's review, show report */}
         {!isMyReview && (
           <button onClick={() => onReport(reviewId)} style={pillBtn('#fff3e0', '#e65100')}>
             Report

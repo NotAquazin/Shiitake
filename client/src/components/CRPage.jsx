@@ -11,7 +11,7 @@ import ReviewForm from './ReviewForm';
 import ReviewCard from './ReviewCard';
 import { useParams } from 'react-router-dom';
 
-const API_BASE = 'http://localhost:13000';
+const API_BASE = '';
 
 const CRPage = () => {
   const { pk } = useParams(); // 'faura-1' in this example
@@ -27,7 +27,19 @@ const CRPage = () => {
   const [editingReview, setEditingReview] = useState(null)
   const [sortBy,        setSortBy]        = useState('Newest')
   const [reported,      setReported]      = useState(new Set())
-  const [userVotes,     setUserVotes]     = useState({})
+  const [userVotes,     setUserVotes]     = useState(() => {
+    const username = localStorage.getItem('shiitake_username') || '';
+    if (!username || !localStorage.getItem('shiitake_token')) return {};
+    try {
+      return JSON.parse(localStorage.getItem(`shiitake_votes_${username}`) || '{}');
+    } catch {
+      return {};
+    }
+  })
+  const [liveAmenities, setLiveAmenities] = useState(null)
+
+  const currentUsername = localStorage.getItem('shiitake_username') || 'Anonymous';
+  const currentUserId = localStorage.getItem('shiitake_userID')
 
   function getReviewId(review) {
     return review?.pk ?? review?.id
@@ -72,8 +84,8 @@ const CRPage = () => {
     loadCR();
       }, [pk]); // Re-run if the primary key changes
 
-// The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = 'You'
+  const isLoggedIn = !!localStorage.getItem('shiitake_token');
+  const CURRENT_USER = localStorage.getItem('shiitake_username') || currentUsername
 
   const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
@@ -81,9 +93,11 @@ const CRPage = () => {
     const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
 
     // Average rating across all reviews
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0
+    const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
+
+    const visibleTags = liveAmenities
+      ? liveAmenities.filter(a => a.working).map(a => a.label)
+      : cr.tags
 
     // Sort a copy of reviews (never mutate state directly)
     const sortedReviews = [...reviews].sort((a, b) => {
@@ -122,10 +136,11 @@ const CRPage = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               CRId: cr.id ?? Number(pk),
+              UserId: currentUserId ? Number(currentUserId) : null,
               rating: reviewData.rating,
               comment: reviewData.text,
               reviewTags: reviewData.amenities,
-              author: reviewData.author,
+              author: currentUsername,
             }),
           })
 
@@ -136,6 +151,22 @@ const CRPage = () => {
           setReviews((prev) => [created, ...prev])
         }
 
+        // Update CR tags: remove amenities marked as not working
+        if (Array.isArray(reviewData.amenities) && reviewData.amenities.length > 0) {
+          const newTags = reviewData.amenities.filter(a => a.working).map(a => a.label)
+          try {
+            await fetch(`${API_BASE}/crs/${cr.id ?? Number(pk)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tags: newTags }),
+            })
+            setCR(prev => ({ ...prev, tags: newTags }))
+          } catch (tagErr) {
+            console.error('Could not update CR tags:', tagErr)
+          }
+        }
+
+        setLiveAmenities(null)
         setShowForm(false)
         setEditingReview(null)
       } catch (error) {
@@ -145,6 +176,10 @@ const CRPage = () => {
     }
 
     async function applyVote(reviewId, nextVote) {
+      if (!isLoggedIn) {
+        alert('Please log in to like or dislike reviews.')
+        return
+      }
       const prevVote = userVotes[reviewId]
       if (prevVote === nextVote) return
 
@@ -178,6 +213,11 @@ const CRPage = () => {
 
           if (!nextVote) {
             delete updated[reviewId]
+          }
+
+          const username = localStorage.getItem('shiitake_username') || ''
+          if (username) {
+            localStorage.setItem(`shiitake_votes_${username}`, JSON.stringify(updated))
           }
 
           return updated
@@ -250,7 +290,7 @@ const CRPage = () => {
             color: 'white',
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {cr.building} — Floor {cr.floor}
+              {cr.building} — {cr.name}
             </h1>
 
             {/* Availability badge */}
@@ -271,7 +311,7 @@ const CRPage = () => {
               <p style={{ margin: '0 0 4px', fontSize: '12px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Average Rating ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
               </p>
-              <StarRating rating={Math.round(avgRating)} interactive={false} />
+              <StarRating rating={avgRating} interactive={false} />
             </div>
 
             {/* Amenities */}
@@ -279,7 +319,7 @@ const CRPage = () => {
               Amenities
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {cr.tags.map((amenity) => (
+              {visibleTags.map((amenity) => (
                 <span
                   key={amenity}
                   style={{
@@ -287,11 +327,11 @@ const CRPage = () => {
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: '500',
-                    background: '#d4edda'
-
+                    background: '#d4edda',
+                    color: '#155724',
                   }}
                 >
-                {amenity}
+                  {amenity}
                 </span>
               ))}
             </div>
@@ -331,8 +371,13 @@ const CRPage = () => {
               )}
             </div>
 
-            {/* Leave a review button (hidden while the form is open) */}
-            {!showForm && (
+            {/* Leave a review button (only for logged-in users, hidden while the form is open) */}
+            {!showForm && !isLoggedIn && (
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '13px', marginBottom: '16px' }}>
+                <a href="/login" style={{ color: '#153448', fontWeight: '700' }}>Log in</a> to leave a review.
+              </p>
+            )}
+            {!showForm && isLoggedIn && (
               <button
                 onClick={handleClickLeaveReview}
                 style={{
@@ -358,9 +403,11 @@ const CRPage = () => {
                 cr={cr}
                 existingReview={editingReview}
                 onSubmit={handleSubmitReview}
+                onAmenityChange={(amenities) => setLiveAmenities(amenities)}
                 onCancel={() => {
                   setShowForm(false)
                   setEditingReview(null)
+                  setLiveAmenities(null)
                 }}
               />
             )}
@@ -380,6 +427,7 @@ const CRPage = () => {
                     review={review}
                     currentUser={CURRENT_USER}
                     currentVote={userVotes[getReviewId(review)] || null}
+                    isLoggedIn={isLoggedIn}
                     onLike={handleLike}
                     onDislike={handleDislike}
                     onEdit={handleEdit}
@@ -394,5 +442,6 @@ const CRPage = () => {
       </div>
     )
 };
+
 
 export default CRPage;

@@ -27,11 +27,11 @@ const Map = () => {
     async function fetchCRs() {
         try {
             // Use pk in the fetch URL
-            const crRes = await fetch('http://localhost:13000/CRs');
+            const crRes = await fetch('/CRs');
             const crData = await crRes.json();
             setCRs(crData);
 
-            const revRes = await fetch('http://localhost:13000/reviews');
+            const revRes = await fetch('/reviews');
             const allReviews = await revRes.json();
 
             setLoading(false);
