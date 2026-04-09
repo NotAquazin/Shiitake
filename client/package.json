@@ -10,6 +10,7 @@
     "axios": "^1.13.5",
     "bootstrap": "^5.3.8",
     "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-leaflet": "^5.0.0",
@@ -21,7 +22,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --watchAll=false",
-"test:coverage": "react-scripts test --watchAll=false --coverage",
+    "test:coverage": "react-scripts test --watchAll=false --coverage",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -54,5 +55,4 @@
       "last 1 safari version"
     ]
   }
-  
 }

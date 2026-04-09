@@ -89,6 +89,12 @@ const InteractiveMap = () => {
               <button>Leave Review</button>
           </div>
       `).openPopup();
+      
+      //Cleanup function to remove map on unmount
+      return () => {
+        map.remove();
+        mapRef.current = null;
+      };
     }
   }, []);
 
