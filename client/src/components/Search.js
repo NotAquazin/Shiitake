@@ -75,6 +75,10 @@ function Search() {
         );
       }
 
+      if (distance !== '') {
+        
+      }
+
       setResults(filtered);
     } catch (err) {
       console.error('Failed to fetch CRs:', err);

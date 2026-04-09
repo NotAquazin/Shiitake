@@ -4,7 +4,6 @@ import ReviewCard from './ReviewCard';
 
 const API_BASE = '';
 const Profile = () => {
-    // Matches the name used in App.js (pk)
     const { pk } = useParams(); 
     
     const [user, setUser] = useState(null);
@@ -303,4 +302,6 @@ const labelStyle = {
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
 }
+
 export default Profile;
+
