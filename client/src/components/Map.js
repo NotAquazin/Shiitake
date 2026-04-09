@@ -51,12 +51,12 @@ const Map = () => {
             const allReviews = await revRes.json();
 
             setLoading(false);
-            if (!liveTracking) { setUserPosition([14.6396, 121.0786]); }
         } catch (err) {
             console.error("Fetch error:", err);
             setLoading(false);
         }
     }
+    setUserPosition([14.6396, 121.0786]); 
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
