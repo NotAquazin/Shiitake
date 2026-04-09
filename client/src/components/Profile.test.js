@@ -15,9 +15,12 @@ const mockUser = {
 };
 
 async function renderProfile() {
-  fetch.mockImplementation((url) => {
+  fetch.mockImplementation((url, options) => {
     if (url.includes('/users/1')) {
-      return Promise.resolve({ ok: true, json: async () => mockUser });
+      return Promise.resolve({ 
+        ok: true, 
+        json: async () => ({ ...mockUser, user: mockUser }) 
+      });
     }
     if (url.includes('/reviews')) {
       return Promise.resolve({ ok: true, json: async () => [] });
