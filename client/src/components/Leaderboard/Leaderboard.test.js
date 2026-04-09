@@ -150,4 +150,58 @@ describe('Leaderboard filter panel', () => {
     });
   });
 
+  // Filter by status
+
+  it('filters by status: selecting Closed hides non-Closed rows', async () => {
+    await renderLeaderboard();
+    await openFilterPanel();
+
+    await act(async () => {
+      userEvent.selectOptions(screen.getByDisplayValue('Select status'), 'Closed');
+    });
+    await applyFilter();
+
+    await waitFor(() => {
+      expect(screen.getByText('Arete-2')).toBeInTheDocument();
+      expect(screen.queryByText('MVP-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('CTC-1')).not.toBeInTheDocument();
+    });
+  });
+
+  // Filter by floor
+
+  it('filters by floor: selecting floor 3 hides other floors', async () => {
+    await renderLeaderboard();
+    await openFilterPanel();
+
+    await act(async () => {
+      userEvent.type(screen.getByPlaceholderText('e.g. 2'), '3');
+    });
+    await applyFilter();
+
+    await waitFor(() => {
+      expect(screen.getByText('MVP-3')).toBeInTheDocument();
+      expect(screen.queryByText('MVP-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('Arete-2')).not.toBeInTheDocument();
+    });
+  });
+
+  // Empty state
+
+  it('displays the empty state message when no restrooms match', async () => {
+    await renderLeaderboard();
+    await openFilterPanel();
+
+    await act(async () => {
+      // CTC has no floor 3 in our mock
+      userEvent.selectOptions(screen.getByDisplayValue('Select building'), 'CTC');
+      userEvent.type(screen.getByPlaceholderText('e.g. 2'), '3');
+    });
+    await applyFilter();
+
+    await waitFor(() => {
+      expect(screen.getByText('No restrooms match the selected filters.')).toBeInTheDocument();
+    });
+  });
+
 });
