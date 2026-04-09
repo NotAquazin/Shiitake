@@ -77,6 +77,20 @@ describe('CR Search filters', () => {
     });
   });
 
+  it('shows all CRs on load without clicking Search', async () => {
+    mockFetch(mockCRs);
+    await renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+    });
+  });
+
   it('filters by building', async () => {
     mockFetch(mockCRs);
     await renderSearch();
