@@ -56,7 +56,7 @@ function Search() {
       if (building) {
         filtered = filtered.filter((cr) => cr.building === building);
       }
-      if (floor !== '') {
+      if (floor !== '' && Number(floor) >= 0) {
         filtered = filtered.filter((cr) => cr.floor === Number(floor));
       }
       if (status) {
@@ -120,6 +120,7 @@ function Search() {
             <input
               type="number"
               placeholder="Type valid integer"
+              min="0"
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
               style={inputStyle}
