@@ -148,11 +148,7 @@ const Map = () => {
       ))
     }
 
-      // if navigating
-      {navigating && (
-        destination && navigating && userPosition && (
-        <>
-        <Marker 
+    <Marker 
           position={userPosition}
           draggable={true} 
           eventHandlers={{
@@ -165,9 +161,14 @@ const Map = () => {
             },
           }}
         > </Marker>
+
+      // if navigating
+      {navigating && (
+        <>
+        
         <Routing from={userPosition} to={destination ? [destination.latitude, destination.longitude] : null}/>
       </>
-      ))}
+      )}
     </MapContainer>
 
     {navigating && (
