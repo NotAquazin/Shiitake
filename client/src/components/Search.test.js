@@ -49,8 +49,8 @@ describe('CR Search filters', () => {
   it('populates tags from real DB data', async () => {
     await renderSearch();
     await waitFor(() => {
-      expect(screen.getByText(/Bidet/)).toBeInTheDocument();
-      expect(screen.getByText(/Spacious/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Bidet/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Spacious/ })).toBeInTheDocument();
     });
   });
 
