@@ -34,9 +34,14 @@
     "moduleNameMapper": {
       "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
       "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
-      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js"
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      "^sequelize$": "<rootDir>/../node_modules/sequelize/lib/index.js",
+      "^bcrypt$": "<rootDir>/../node_modules/bcrypt/bcrypt.js",
+      "^jsonwebtoken$": "<rootDir>/../node_modules/jsonwebtoken/index.js",
+      "^pg$": "<rootDir>/../node_modules/pg/lib/index.js"
     }
   },
+  "proxy": "http://localhost:13000",
   "browserslist": {
     "production": [
       ">0.2%",
