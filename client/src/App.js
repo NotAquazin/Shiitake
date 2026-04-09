@@ -6,6 +6,7 @@ import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
+import Leaderboard from "./components/Leaderboard";
 
 const Home = () => {
   const token = localStorage.getItem('shiitake_token');
@@ -48,6 +49,9 @@ const App = () => {
               <li className="nav-item">
                     <Link className="nav-link" to="/search">Search</Link>
               </li>
+              <li className="nav-item">
+                    <Link className="nav-link" to="/leaderboard">Leaderboard</Link>
+              </li>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item">
@@ -81,6 +85,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/cr/:pk" element={<CRPage />} /> 
         
         {/* added route */}
