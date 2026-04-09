@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const API_URL = 'http://localhost:13000';
+const API_URL = '';
 
 const STATUSES = [
   { value: 'available',         label: 'Available'         },

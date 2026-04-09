@@ -71,6 +71,28 @@ app.get('/users', async (req, res) => {
     }
 });
 
+app.put('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const currentBadges = user.badges || [];
+        const newBadges = Array.isArray(req.body.badges) ? req.body.badges : [];
+        const updatedBadges = [...new Set([...currentBadges, ...newBadges])];
+
+        await user.update({
+            description: req.body.description,
+            email: req.body.email,
+            badges: updatedBadges,
+        });
+
+        return res.status(200).json({ message: 'User updated successfully!', user });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // Gets a single user by ID
 app.get('/users/:id', async (req, res) => {
     try {
@@ -124,6 +146,20 @@ app.get('/crs/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// PATCH a CR's tags
+app.patch('/crs/:id', async (req, res) => {
+    try {
+        const cr = await CR.findByPk(req.params.id);
+        if (!cr) return res.status(404).json({ error: 'CR not found' });
+
+        await cr.update({ tags: req.body.tags });
+        return res.status(200).json({ message: 'CR tags updated successfully!', cr });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==========================================
 // REVIEW ROUTES
 // ==========================================
@@ -168,6 +204,25 @@ app.put('/reviews/:id', async (req, res) => {
         });
 
         if (review.CRId) await recalcAverageRating(review.CRId);
+
+        return res.status(200).json({ message: 'Review updated successfully!', review });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/reviews/:id', async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        await review.update({
+            rating: req.body.rating,
+            comment: req.body.comment,
+            reviewTags: Array.isArray(req.body.reviewTags) ? req.body.reviewTags : review.reviewTags,
+            author: req.body.author || review.author
+        });
 
         return res.status(200).json({ message: 'Review updated successfully!', review });
     } catch (err) {
