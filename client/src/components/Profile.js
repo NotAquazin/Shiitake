@@ -4,7 +4,6 @@ import ReviewCard from './ReviewCard';
 
 const API_BASE = 'http://localhost:13000';
 const Profile = () => {
-    // Matches the name used in App.js (pk)
     const { pk } = useParams(); 
     
     const [user, setUser] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
@@ -10,6 +10,7 @@ import Routing from './Routing';
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import userPng from "./userIcon.png";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -18,6 +19,14 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+const userIcon = L.icon({
+    iconUrl: userPng,
+
+    iconSize:     [30, 30], 
+    iconAnchor:   [15, 20],
+});
+
 
 const Map = () => {
   const [crs, setCRs] = useState([]); 
@@ -29,6 +38,7 @@ const Map = () => {
   const [userPosition, setUserPosition] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(0);
   const lastUpdateRef = useRef(0);
+  const [liveTracking, setLiveTracking] = useState(true); 
 
   useEffect(() => {
     async function fetchCRs() {
@@ -41,7 +51,7 @@ const Map = () => {
             const allReviews = await revRes.json();
 
             setLoading(false);
-            setUserPosition([14.6396, 121.0786]);
+            if (!liveTracking) { setUserPosition([14.6396, 121.0786]); }
         } catch (err) {
             console.error("Fetch error:", err);
             setLoading(false);
@@ -51,19 +61,11 @@ const Map = () => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const coords = [pos.coords.latitude, pos.coords.longitude];
-
-        
-        if (Date.now() - lastUpdate > 2000) {
-          //setUserPosition(coords);
+        if (Date.now() - lastUpdate > 2000 && liveTracking) {
+          setUserPosition(coords);
           lastUpdateRef.current = Date.now();
         }
-      },
-      (err) => console.error(err),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000,
-    });
+      }, );
 
     fetchCRs();
     setPosition([14.6396, 121.0786]);
@@ -133,7 +135,7 @@ const Map = () => {
                 className="btn btn-primary btn-sm w-100"
                 onClick={() => handleLeaveReviewClick(cr.id)}
               >
-                Leave Review
+                See Reviews
               </button>
 
               <button 
@@ -150,22 +152,19 @@ const Map = () => {
 
     <Marker 
           position={userPosition}
-          draggable={true} 
+          icon={userIcon}
+          draggable={!liveTracking} 
           eventHandlers={{
             dragend: (e) => {
               const marker = e.target;
               const newPos = marker.getLatLng();
-              // Update state with the new dragged position
               setUserPosition([newPos.lat, newPos.lng]);
-            
             },
           }}
-        > </Marker>
-
+    > </Marker>
       // if navigating
       {navigating && (
         <>
-        
         <Routing from={userPosition} to={destination ? [destination.latitude, destination.longitude] : null}/>
       </>
       )}
@@ -174,7 +173,7 @@ const Map = () => {
     {navigating && (
     <button className="btn btn-primary btn-sm w-100 mt-2"
           onClick={() => setNavigating(false)} >
-        Cancel Navigation
+        Stop Navigation
     </button>
     )}
     

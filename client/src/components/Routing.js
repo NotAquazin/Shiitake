@@ -21,6 +21,7 @@ const Routing = ({ from, to }) => {
             }
 
         }),
+        createMarker: () => null,
         lineOptions: { styles: [{ color: "#6FA1EC", weight: 5 }] },
         addWaypoints: false,
         draggableWaypoints: true,
