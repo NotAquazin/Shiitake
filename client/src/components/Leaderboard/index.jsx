@@ -7,9 +7,9 @@
 //   activeFilters - the currently applied filter values (for active-filter badge)
 //   sortBy        - how the list is sorted
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
-import leaderboardData from './leaderboardData'
 import LeaderboardRow  from './components/LeaderboardRow'
 import FilterPanel     from './components/FilterPanel'
 
@@ -28,11 +28,58 @@ function countActiveFilters(filters) {
 
 export default function Leaderboard() {
 
-  const [restrooms,     setRestrooms]     = useState(leaderboardData.restrooms)
-  const [filtered,      setFiltered]      = useState(leaderboardData.restrooms)
+  const [restrooms,     setRestrooms]     = useState([])
+  const [filtered,      setFiltered]      = useState([])
   const [showFilter,    setShowFilter]    = useState(false)
   const [activeFilters, setActiveFilters] = useState({ building: '', floor: '', distance: '', status: '', amenities: [] })
   const [sortBy,        setSortBy]        = useState('Highest Rated')
+  const [loading,       setLoading]       = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const crsRes = await axios.get('http://localhost:13000/crs');
+        const revsRes = await axios.get('http://localhost:13000/reviews');
+        
+        const crsData = crsRes.data;
+        const revsData = revsRes.data;
+
+        const formattedCrs = crsData.map(cr => {
+          const crReviews = revsData.filter(r => r.CRId === cr.id);
+          let statusText = 'Open';
+          if (cr.status === 'closed') statusText = 'Closed';
+          if (cr.status === 'under maintenance') statusText = 'Maintenance';
+
+          // Calculate average dynamically if the backend database cached value is outdated/0
+          let calculatedRating = cr.averageRating || 0;
+          if (crReviews.length > 0) {
+            const sum = crReviews.reduce((acc, curr) => acc + curr.rating, 0);
+            calculatedRating = sum / crReviews.length;
+          }
+
+          return {
+            id: cr.id,
+            code: cr.name || 'Unknown',
+            buildingName: cr.building || 'Unknown',
+            floor: cr.floor || 0,
+            distance: 0, // Placeholder
+            status: statusText,
+            rating: calculatedRating,
+            reviewCount: crReviews.length,
+            amenities: cr.tags || []
+          };
+        });
+
+        setRestrooms(formattedCrs);
+        setFiltered(formattedCrs);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching leaderboard data:", error);
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   // Sort a copy of filtered (never mutate state directly)
   const sortedRestrooms = [...filtered].sort((a, b) => {
@@ -279,7 +326,11 @@ export default function Leaderboard() {
           )}
 
           {/* The leaderboard rows */}
-          {sortedRestrooms.length === 0 ? (
+          {loading ? (
+             <p style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
+               Loading data...
+             </p>
+          ) : sortedRestrooms.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
               No restrooms match the selected filters.
             </p>
