@@ -12,6 +12,11 @@
  * Test numbers (TEST 1 … TEST 5) match test-cases.rest in dockerfile/.
  */
 
+jest.mock('bcrypt', () => ({
+  hash:    jest.fn().mockResolvedValue('$hashed_password'),
+  compare: jest.fn().mockResolvedValue(true),
+}));
+
 const { Sequelize, ValidationError } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt    = require('jsonwebtoken');
@@ -28,10 +33,9 @@ const sequelize = new Sequelize({
   logging:   false,
 });
 
-// Import models relative to this file (3 levels up reaches the Shiitake root)
-const User   = require('../../../models/userModel')(sequelize);
-const CR     = require('../../../models/crModel')(sequelize);
-const Review = require('../../../models/reviewModel')(sequelize);
+const User   = require('./models/userModel')(sequelize);
+const CR     = require('./models/crModel')(sequelize);
+const Review = require('./models/reviewModel')(sequelize);
 
 User.hasMany(Review);
 Review.belongsTo(User);
@@ -300,16 +304,14 @@ describe('Auth controller', () => {
   };
 
   const { registerUser, loginUser } =
-    require('../../../server/controllers/authController')(mockUser);
+    require('./server/controllers/authController')(mockUser);
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Speed up tests: skip real bcrypt rounds
-    jest.spyOn(bcrypt, 'hash').mockResolvedValue('$hashed_password');
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+    mockUser.findOne.mockReset();
+    mockUser.create.mockReset();
+    bcrypt.hash.mockResolvedValue('$hashed_password');
+    bcrypt.compare.mockResolvedValue(true);
   });
-
-  afterEach(() => jest.restoreAllMocks());
 
   // ── register ─────────────────────────────────────────────────────────────────
   it('register: returns 201 for a valid Ateneo email', async () => {
@@ -393,7 +395,7 @@ describe('Auth controller', () => {
 
   it('login: returns 401 for a wrong password', async () => {
     mockUser.findOne.mockResolvedValue({ id: 6, email: 'wp@ateneo.edu', password: '$hashed' });
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false); // wrong password
+    bcrypt.compare.mockResolvedValueOnce(false); // wrong password
 
     const req = { body: { email: 'wp@ateneo.edu', password: 'wrongPassword' } };
     const res = mockRes();

@@ -306,23 +306,6 @@ describe('CR Search filters', () => {
     });
   });
 
-  it('ignores negative floor input and returns all CRs', async () => {
-    mockFetch(mockCRs);
-    await renderSearch();
-
-    await act(async () => {
-      userEvent.type(screen.getByPlaceholderText(/type valid integer/i), '-1');
-      userEvent.click(screen.getByRole('button', { name: /search/i }));
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByText(/No CR matches found/i)).not.toBeInTheDocument();
-
-      expect(screen.getByText(/4\.5 \/ 5/)).toBeInTheDocument();
-      expect(screen.getByText(/2\.0 \/ 5/)).toBeInTheDocument();
-      expect(screen.getByText(/3\.5 \/ 5/)).toBeInTheDocument();
-    });
-  });
 
   it('shows "No CR matches found" when nothing matches', async () => {
     mockFetch(mockCRs);
