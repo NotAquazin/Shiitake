@@ -3,9 +3,8 @@
 // Mirrors the shape/style of ReviewForm.jsx from the CR review app.
 
 import { useState } from 'react'
-import { BUILDINGS, STATUSES, AMENITY_LIST } from '../leaderboardData'
 
-function FilterPanel({ onApply, onCancel }) {
+function FilterPanel({ buildings = [], statuses = [], allAmenities = [], onApply, onCancel }) {
 
   const [building,  setBuilding]  = useState('')
   const [floor,     setFloor]     = useState('')
@@ -58,9 +57,9 @@ function FilterPanel({ onApply, onCancel }) {
             style={inputStyle}
           >
             <option value=''>Select building</option>
-            {BUILDINGS.map(b => (
-              <option key={b.code} value={b.code}>
-                {b.code} — {b.name}
+            {buildings.map(b => (
+              <option key={b} value={b}>
+                {b}
               </option>
             ))}
           </select>
@@ -96,7 +95,7 @@ function FilterPanel({ onApply, onCancel }) {
             style={inputStyle}
           >
             <option value=''>Select status</option>
-            {STATUSES.map(s => (
+            {statuses.map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
@@ -108,7 +107,7 @@ function FilterPanel({ onApply, onCancel }) {
       <div style={{ marginBottom: '18px' }}>
         <label style={labelStyle}>Amenities (must have all selected)</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {AMENITY_LIST.map(amenity => {
+          {allAmenities.map(amenity => {
             const active = amenities.includes(amenity)
             return (
               <button

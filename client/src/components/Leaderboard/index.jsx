@@ -99,7 +99,7 @@ export default function Leaderboard() {
     let result = [...restrooms]
 
     if (filters.building)
-      result = result.filter(r => r.building === filters.building)
+      result = result.filter(r => r.buildingName === filters.building)
 
     if (filters.floor)
       result = result.filter(r => r.floor === parseInt(filters.floor))
@@ -131,49 +131,12 @@ export default function Leaderboard() {
   const filterCount = countActiveFilters(activeFilters)
 
 
-  const NavIcon = ({ d, active, onClick, isMap }) => (
-    <div
-      onClick={onClick}
-      style={{
-        color: active ? '#E8A020' : '#8aafcc',
-        borderBottom: active ? '2.5px solid #E8A020' : '2.5px solid transparent',
-        paddingBottom: '4px',
-        cursor: 'pointer',
-        transition: 'color 0.15s',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <svg width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
-        {d}
-      </svg>
-    </div>
-  )
-
   // Render 
 
   return (
     <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '0 0 40px' }}>
 
-      {/* Top Nav Bar */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1a2e40 0%, #24435e 100%)',
-        borderRadius: '0 0 18px 18px',
-        padding: '14px 0 10px',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-        marginBottom: '20px',
-      }}>
-        <NavIcon active={false} d={<><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></>} />
-        <NavIcon active={true}  d={<><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></>} />
-        <NavIcon active={false} d={<><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></>} />
-        <NavIcon active={false} d={<><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></>} />
-      </div>
-
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '0 16px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px 16px 0' }}>
 
         {/* Leaderboard header card */}
         <div style={{
@@ -322,6 +285,9 @@ export default function Leaderboard() {
           {/* FilterPanel */}
           {showFilter && (
             <FilterPanel
+              buildings={[...new Set(restrooms.map(r => r.buildingName))].filter(Boolean).sort()}
+              statuses={['Open', 'Maintenance', 'Closed']}
+              allAmenities={[...new Set(restrooms.flatMap(r => r.amenities))].filter(Boolean).sort()}
               onApply={handleApplyFilter}
               onCancel={() => setShowFilter(false)}
             />

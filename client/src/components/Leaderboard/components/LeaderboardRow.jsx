@@ -5,7 +5,7 @@
 function LeaderboardRow({ restroom, rank, onClick }) {
 
   const rankColors = { 1: '#E8A020', 2: '#8a9db5', 3: '#b5895a' }
-  const badgeBg = rankColors[rank] || '#E8A020'
+  const badgeBg = rankColors[rank] || '#456173' // Neutral blue/slate for ranks 4+
 
   const statusColors = {
     'Available':         { bg: '#d4edda', color: '#155724' },
