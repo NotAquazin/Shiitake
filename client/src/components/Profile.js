@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ReviewCard from './ReviewCard';
 
-const API_BASE = 'http://localhost:13000';
+const API_BASE = '';
 const Profile = () => {
     // Matches the name used in App.js (pk)
     const { pk } = useParams(); 
@@ -25,11 +25,11 @@ const Profile = () => {
                 
 
                 // Use pk in the fetch URL
-                const userRes = await fetch(`http://localhost:13000/users/${pk}`);
+                const userRes = await fetch(`${API_BASE}/users/${pk}`);
                 const userData = await userRes.json();
                 setUser(userData);
 
-                const revRes = await fetch(`http://localhost:13000/reviews`);
+                const revRes = await fetch(`${API_BASE}/reviews`);
                 const allReviews = await revRes.json();
                 
                 // Filter reviews using the primary key

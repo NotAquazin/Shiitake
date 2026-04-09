@@ -26,7 +26,7 @@ const Login = () => {
     const { email, password } = formData;
 
     try {
-      const response = await axios.post('http://localhost:13000/api/auth/login', {
+      const response = await axios.post('/api/auth/login', {
         email,
         password
       });

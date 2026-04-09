@@ -146,6 +146,20 @@ app.get('/crs/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// PATCH a CR's tags
+app.patch('/crs/:id', async (req, res) => {
+    try {
+        const cr = await CR.findByPk(req.params.id);
+        if (!cr) return res.status(404).json({ error: 'CR not found' });
+
+        await cr.update({ tags: req.body.tags });
+        return res.status(200).json({ message: 'CR tags updated successfully!', cr });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==========================================
 // REVIEW ROUTES
 // ==========================================

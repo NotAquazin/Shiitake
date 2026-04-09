@@ -11,7 +11,7 @@ import ReviewForm from './ReviewForm';
 import ReviewCard from './ReviewCard';
 import { useParams } from 'react-router-dom';
 
-const API_BASE = 'http://localhost:13000';
+const API_BASE = '';
 
 const CRPage = () => {
   const { pk } = useParams(); // 'faura-1' in this example
@@ -28,6 +28,10 @@ const CRPage = () => {
   const [sortBy,        setSortBy]        = useState('Newest')
   const [reported,      setReported]      = useState(new Set())
   const [userVotes,     setUserVotes]     = useState({})
+  const [liveAmenities, setLiveAmenities] = useState(null)
+
+  const currentUsername = localStorage.getItem('shiitake_username') || 'Anonymous';
+  const currentUserId = localStorage.getItem('shiitake_userID')
 
   function getReviewId(review) {
     return review?.pk ?? review?.id
@@ -73,7 +77,7 @@ const CRPage = () => {
       }, [pk]); // Re-run if the primary key changes
 
 // The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = 'You'
+  const CURRENT_USER = currentUsername
 
   const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
@@ -82,6 +86,10 @@ const CRPage = () => {
 
     // Average rating across all reviews
     const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
+
+    const visibleTags = liveAmenities
+      ? liveAmenities.filter(a => a.working).map(a => a.label)
+      : cr.tags
 
     // Sort a copy of reviews (never mutate state directly)
     const sortedReviews = [...reviews].sort((a, b) => {
@@ -120,10 +128,11 @@ const CRPage = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               CRId: cr.id ?? Number(pk),
+              UserId: currentUserId ? Number(currentUserId) : null,
               rating: reviewData.rating,
               comment: reviewData.text,
               reviewTags: reviewData.amenities,
-              author: reviewData.author,
+              author: currentUsername,
             }),
           })
 
@@ -134,6 +143,22 @@ const CRPage = () => {
           setReviews((prev) => [created, ...prev])
         }
 
+        // Update CR tags: remove amenities marked as not working
+        if (Array.isArray(reviewData.amenities) && reviewData.amenities.length > 0) {
+          const newTags = reviewData.amenities.filter(a => a.working).map(a => a.label)
+          try {
+            await fetch(`${API_BASE}/crs/${cr.id ?? Number(pk)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tags: newTags }),
+            })
+            setCR(prev => ({ ...prev, tags: newTags }))
+          } catch (tagErr) {
+            console.error('Could not update CR tags:', tagErr)
+          }
+        }
+
+        setLiveAmenities(null)
         setShowForm(false)
         setEditingReview(null)
       } catch (error) {
@@ -248,7 +273,7 @@ const CRPage = () => {
             color: 'white',
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {cr.building} — Floor {cr.floor}
+              {cr.building} — {cr.name}
             </h1>
 
             {/* Availability badge */}
@@ -277,7 +302,7 @@ const CRPage = () => {
               Amenities
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {cr.tags.map((amenity) => (
+              {visibleTags.map((amenity) => (
                 <span
                   key={amenity}
                   style={{
@@ -286,10 +311,9 @@ const CRPage = () => {
                     fontSize: '12px',
                     fontWeight: '500',
                     background: '#d4edda'
-
                   }}
                 >
-                {amenity}
+                  {amenity}
                 </span>
               ))}
             </div>
@@ -356,9 +380,11 @@ const CRPage = () => {
                 cr={cr}
                 existingReview={editingReview}
                 onSubmit={handleSubmitReview}
+                onAmenityChange={(amenities) => setLiveAmenities(amenities)}
                 onCancel={() => {
                   setShowForm(false)
                   setEditingReview(null)
+                  setLiveAmenities(null)
                 }}
               />
             )}
