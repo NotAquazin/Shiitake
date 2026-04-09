@@ -303,4 +303,6 @@ const labelStyle = {
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
 }
+
 export default Profile;
+
