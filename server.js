@@ -127,9 +127,17 @@ app.get('/crs/:id', async (req, res) => {
 // ==========================================
 // REVIEW ROUTES
 // ==========================================
+
+async function recalcAverageRating(CRId) {
+    const reviews = await Review.findAll({ where: { CRId } });
+    const avg = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+    await CR.update({ averageRating: avg }, { where: { id: CRId } });
+}
+
 app.post('/reviews', async (req, res) => {
     try {
         const newReview = await Review.create(req.body);
+        if (req.body.CRId) await recalcAverageRating(req.body.CRId);
         res.status(201).json({ message: 'Review created successfully!', review: newReview });
     } catch (err) {
         console.error(err);
@@ -159,6 +167,8 @@ app.put('/reviews/:id', async (req, res) => {
             author: req.body.author || review.author
         });
 
+        if (review.CRId) await recalcAverageRating(review.CRId);
+
         return res.status(200).json({ message: 'Review updated successfully!', review });
     } catch (err) {
         console.error(err);
@@ -171,7 +181,9 @@ app.delete('/reviews/:id', async (req, res) => {
         const review = await Review.findByPk(req.params.id);
         if (!review) return res.status(404).json({ error: 'Review not found' });
 
+        const CRId = review.CRId;
         await review.destroy();
+        if (CRId) await recalcAverageRating(CRId);
         return res.status(200).json({ message: 'Review deleted successfully!' });
     } catch (err) {
         console.error(err);
