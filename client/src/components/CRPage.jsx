@@ -121,7 +121,7 @@ const CRPage = () => {
               rating: reviewData.rating,
               comment: reviewData.text,
               reviewTags: reviewData.amenities,
-              author: reviewData.author,
+              author: currentUsername,
             }),
           })
 
