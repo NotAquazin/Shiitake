@@ -26,7 +26,7 @@ const Login = () => {
     const { email, password } = formData;
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post('/api/auth/login', {
         email,
         password
       });
@@ -37,6 +37,7 @@ const Login = () => {
         localStorage.setItem('shiitake_token', token);
         if (user && user.username) {
           localStorage.setItem('shiitake_username', user.username);
+          localStorage.setItem('shiitake_userID', user.id);
         }
         // Redirect to home and force reload to update navbar
         window.location.href = '/';

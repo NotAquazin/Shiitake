@@ -1,23 +1,51 @@
 import { useState } from 'react'
 import StarRating from './StarRating'
 
-function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
+function ReviewForm({ cr, existingReview, onSubmit, onCancel, onAmenityChange }) {
+
+  function buildInitialAmenities() {
+    if (Array.isArray(existingReview?.amenities) && existingReview.amenities.length > 0) {
+      return existingReview.amenities
+    }
+    if (Array.isArray(existingReview?.reviewTags) && existingReview.reviewTags.length > 0) {
+      return existingReview.reviewTags
+    }
+    // New review: pull from cr.tags (strings) and wrap into objects
+    if (Array.isArray(cr?.tags) && cr.tags.length > 0) {
+      return cr.tags.map((tag) =>
+        typeof tag === 'string' ? { label: tag, working: true } : tag
+      )
+    }
+    // Fallback: cr.amenities if it's already an array of objects
+    if (Array.isArray(cr?.amenities) && cr.amenities.length > 0) {
+      return cr.amenities
+    }
+    return []
+  }
+
+  // const initialAmenities = Array.isArray(existingReview?.amenities)
+  //   ? existingReview.amenities
+  //   : Array.isArray(cr?.amenities)
+  //     ? cr.amenities
+  //     : []
 
   // pre-fill if editing, otherwise start blank
   const [rating, setRating] = useState(existingReview ? existingReview.rating : 0)
   const [text, setText] = useState(existingReview ? existingReview.text : '')
-  const [amenities, setAmenities] = useState(existingReview ? existingReview.amenities : cr.amenities)
+  const [amenities, setAmenities] = useState(buildInitialAmenities)
   const [error, setError] = useState('')
 
   // flip the working status of whichever amenity was clicked
   function toggleAmenity(index) {
-    const updated = amenities.map((amenity, i) => {
+    const sourceAmenities = Array.isArray(amenities) ? amenities : []
+    const updated = sourceAmenities.map((amenity, i) => {
       if (i === index) {
         return { ...amenity, working: !amenity.working }
       }
       return amenity
     })
     setAmenities(updated)
+    onAmenityChange?.(updated)
   }
 
   function handleSubmit() {
@@ -51,29 +79,35 @@ function ReviewForm({ cr, existingReview, onSubmit, onCancel }) {
       </div>
 
       {/* amenity toggles — click to flip working/broken */}
-      <div style={{ marginBottom: '16px' }}>
-        <label style={labelStyle}>Update Amenity Status (click to toggle)</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {amenities.map((amenity, index) => (
-            <button
-              key={amenity.label}
-              onClick={() => toggleAmenity(index)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: '20px',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: '500',
-                background: amenity.working ? '#d4edda' : '#f8d7da',
-                color: amenity.working ? '#155724' : '#721c24',
-              }}
-            >
-              {amenity.working ? '✓' : '✗'} {amenity.label}
-            </button>
-          ))}
+      {amenities.length > 0 && (
+        <div style={{ marginBottom: '16px' }}>
+          <label style={labelStyle}>Update Amenity Status</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {amenities.map((amenity, index) => (
+              <button
+                key={amenity.label}
+                onClick={() => toggleAmenity(index)}
+                title={amenity.working ? 'Mark as not working' : 'Mark as working'}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  background: amenity.working ? '#d4edda' : '#f8d7da',
+                  color: amenity.working ? '#155724' : '#721c24',
+                }}
+              >
+                {amenity.working ? '✓' : '✗'} {amenity.label}
+              </button>
+            ))}
+          </div>
+          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888' }}>
+            Tap a tag to toggle whether it's currently working.
+          </p>
         </div>
-      </div>
+      )}
 
       {/* optional text box */}
       <div style={{ marginBottom: '16px' }}>

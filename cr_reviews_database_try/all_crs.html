@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Shiitake: All Restrooms</h1>
+    <div id="cr-list">Loading restrooms...</div>
+
+    <script>
+        async function loadCRs() {
+            const response = await fetch('http://localhost:13000/crs');
+            const crs = await response.json();
+            const listDiv = document.getElementById('cr-list');
+            
+            if (crs.length === 0) {
+                listDiv.innerHTML = "<p>No CRs found. Add some in Supabase!</p>";
+                return;
+            }
+
+            listDiv.innerHTML = crs.map(cr => `
+                <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+                    <h3>${cr.name}</h3>
+                    <p>Location: ${cr.building}, Floor ${cr.floor}</p>
+                    <a href="cr_page.html?id=${cr.id}">View Details & Reviews</a>
+                </div>
+            `).join('');
+        }
+        loadCRs();
+    </script>
+</body>
+</html>

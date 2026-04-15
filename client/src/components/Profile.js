@@ -1,260 +1,307 @@
-import { useState } from 'react';
-import sampleCR from './crData';
-import StarRating from './StarRating';
-import ReviewForm from './ReviewForm';
-import ReviewCard from './ReviewCard';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import ReviewCard from './ReviewCard';
 
-const CRPage = () => {
-  const { id } = useParams(); // 'faura-1' in this example
+const API_BASE = '';
+const Profile = () => {
+    const { pk } = useParams(); 
+    
+    const [user, setUser] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [monthReviews, setMonthReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [editingProfile, setEditingProfile] = useState(false)
+    const [desc, setDesc] = useState("")
 
-// The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = 'You'
+    const [reported, setReported] = useState(new Set());
+    const now = new Date();
+    const currentMonth = now.getMonth(); 
+    const currentYear = now.getFullYear();
+    
+    useEffect(() => {
+        async function loadProfile() {
+            try {
+                
 
-  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']
+                // Use pk in the fetch URL
+                const userRes = await fetch(`${API_BASE}/users/${pk}`);
+                const userData = await userRes.json();
+                setUser(userData);
 
-    const [reviews,       setReviews]       = useState(sampleCR.reviews)
-    const [showForm,      setShowForm]      = useState(false)
-    const [editingReview, setEditingReview] = useState(null)
-    const [sortBy,        setSortBy]        = useState('Newest')
-    const [reported,      setReported]      = useState(new Set())
+                const revRes = await fetch(`${API_BASE}/reviews`);
+                const allReviews = await revRes.json();
+                
+                // Filter reviews using the primary key
+                const myReviews = allReviews.filter(r => r.UserId === parseInt(pk));
+                const myMonthReviews = myReviews.filter((r) => {
+                    const reviewDate = new Date(r.createdAt); 
+                    return (
+                        reviewDate.getMonth() === currentMonth &&
+                        reviewDate.getFullYear() === currentYear
+                    );
+                });
 
-    // Checks if already posted review
-    const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
+                setReviews(myReviews);
+                setMonthReviews(myMonthReviews);
+                handleUpdateBadges(myMonthReviews);
 
-    // Average rating across all reviews
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0
+                setLoading(false);
+            } catch (err) {
+                console.error("Fetch error:", err);
+                setLoading(false);
+            }
+        }
+        loadProfile();
+    }, [pk]); 
 
-    // Sort a copy of reviews (never mutate state directly)
-    const sortedReviews = [...reviews].sort((a, b) => {
-      if (sortBy === 'Newest')        return b.timestamp.localeCompare(a.timestamp)
-      if (sortBy === 'Oldest')        return a.timestamp.localeCompare(b.timestamp)
-      if (sortBy === 'Highest Rated') return b.rating - a.rating
-      if (sortBy === 'Lowest Rated')  return a.rating - b.rating
-      if (sortBy === 'Most Liked')    return b.likes   - a.likes
-      return 0
-    })
+    // HANDLERS 
+    const handleEditProfile = () => {
+        setEditingProfile(true);
+        setDesc(user.description || "");
+    };
+    
+    const handleEdit = (review) => {
+        console.log("Edit requested for review:", review.id);
+    };
 
-    // Event handlers 
+    const handleReport = (reviewId) => {
+        setReported(new Set([...reported, reviewId]));
+        alert('Review reported and hidden from your view.');
+    };
 
-    function handleEdit(review) {
-      setEditingReview(review)
-      setShowForm(true)
-    }
+    const handleDelete = async (reviewId) => {
+        if (window.confirm('Are you sure you want to delete this review?')) {
+            setReviews(reviews.filter(r => r.id !== reviewId));
+        }
+    };
 
-    function handleLike(reviewId) {
-      setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, likes: r.likes + 1 } : r
-      ))
-    }
+    async function handleSaveProfile(newDesc) {
+      try {
+          const response = await fetch(`${API_BASE}/users/${pk}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              description: newDesc,
+              //profile:
+            }),
+          });
 
-    function handleDislike(reviewId) {
-      setReviews(reviews.map((r) =>
-        r.id === reviewId ? { ...r, dislikes: r.dislikes + 1 } : r
-      ))
-    }
+        if (!response.ok) {
+                  const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
 
-    function handleDelete(reviewId) {
-      if (window.confirm('Delete your review?')) {
-        setReviews(reviews.filter((r) => r.id !== reviewId))
+            const errorData = await response.json();
+            errorMsg = errorData.error || JSON.stringify(errorData);
+
+        }
+        const data = await response.json();
+        const updatedUser = data.user;
+        setUser(updatedUser);
+        setEditingProfile(false)
+      } catch (error) {
+        console.error(error)
+       
+        alert('Could not save profile. Please try again.')
       }
     }
 
-    function handleReport(reviewId) {
-      // Add to the reported set so it disappears from the list
-      setReported(new Set([...reported, reviewId]))
-      alert('Review reported. Thank you!')
+    async function handleUpdateBadges(reviews) {
+        const newBadges = [];
+        if (reviews.length >= 5) { newBadges.push(`Bronze_${currentMonth}${currentYear}`) ;}
+        if (reviews.length >= 10) { newBadges.push(`Silver_${currentMonth}${currentYear}`) ;}
+        if (reviews.length >= 20) { newBadges.push(`Gold_${currentMonth}${currentYear}`) ;}
+        if (reviews.length >= 30) { newBadges.push(`Platinum_${currentMonth}${currentYear}`) ;}
+              console.log(newBadges);
+
+        try {
+            const response = await fetch(`${API_BASE}/users/${pk}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              badges: newBadges
+            }),
+          });
+
+        if (!response.ok) {
+                  const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
+
+            const errorData = await response.json();
+            errorMsg = errorData.error || JSON.stringify(errorData);
+
+        }
+        const data = await response.json();
+        const updatedUser = data.user;
+        setUser(updatedUser);
+        setEditingProfile(false)
+      } catch (error) {
+        console.error(error)
+       
+        alert('Could not save profile. Please try again.')
+      }
     }
 
-    // Render
+    if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Fetching Profile...</div>;
+    if (!user) return <div style={{ textAlign: 'center', padding: '50px' }}>User not found in Supabase.</div>;
 
     return (
-      <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px', textAlign: 'center' }}>
+        <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px', textAlign: 'center' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
 
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-
-          <div style={{
-            background: '#153448',
-            borderRadius: '12px',
-            padding: '20px 24px',
-            marginBottom: '20px',
-            color: 'white',
-          }}>
-
-            {/* Picture */}
-            <span style={{
-              width: '200px',            
-              height: '200px',            
-              borderRadius: '50%',        
-              backgroundColor: '#000000', 
-              display: 'flex',
-              alignItems: 'center',
-              color: 'white',
-              fontSize: '24px',
-              fontWeight: '700',
-              margin: '20px auto'         
-            }}>
-              "Profile Picture"
-            </span>
-
-
-            {/* Username */}
-            <span style={{
-              display: 'inline-block',
-              padding: '0px 30px',
-              borderRadius: '20px',
-              fontSize: '30px',
-              fontWeight: '600',
-              background: '#ffffff',
-              marginBottom: '12px',
-              color: 'black',
-            }}>
-              {CURRENT_USER}
-            </span>
-
-            <h1 style={{ margin: '0 0 4px', fontSize: '15px' }}>
-              Description
-            </h1>
-          </div>
-
-          {/* ── Badges Section ── */}
-          <div style={{
-            background: '#EDE5D5',
-            borderRadius: '12px',
-            padding: '20px 24px',
-            marginBottom: '20px',
-
-          }}>
-            {/* Amenities */}
-              <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
-                Badges
-              </h2>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {sampleCR.amenities.map((amenity) => (
-                  <span style={{
-                    width: '100px',            
-                    height: '100px',            
-                    borderRadius: '50%',        
-                    backgroundColor: '#000000', 
-                    display: 'flex',
-                    alignItems: 'center',
+                {/* USER INFO SECTION */}
+                <div style={{
+                    background: '#153448',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                    marginBottom: '20px',
                     color: 'white',
-                    fontSize: '24px',
-                    fontWeight: '700',
-                    margin: '20px auto'         
-                  }}>
-                    Badge
-                  </span>
-                ))}
-              </div>
-          </div>
+                }}>
+                    <span style={{
+                        width: '180px', height: '180px', borderRadius: '50%',
+                        backgroundColor: '#000000', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', color: 'white', fontSize: '40px',
+                        fontWeight: '700', margin: '20px auto'
+                    }}>
+                        {user.username ? user.username[0].toUpperCase() : "?"}
+                    </span>
 
-          {/* ── Favorite CRs Section ── */}
-          <div style={{
-            background: '#EDE5D5',
-            borderRadius: '12px',
-            padding: '20px 24px',
-            marginBottom: '20px',
+                    <span style={{
+                        display: 'inline-block', padding: '0px 30px', borderRadius: '20px',
+                        fontSize: '30px', fontWeight: '600', background: '#ffffff',
+                        marginBottom: '12px', color: 'black',
+                    }}>
+                        {user.username}
+                    </span>
 
-          }}>
-              <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
-                Favorite CRs
-              </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', textAlign: 'center' }}>
-                {sampleCR.amenities.map((amenity) => (
-                  <span
-                    key={amenity.label}
-                    style={{
-                      padding: '3px 10px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      background: '#153448',
-                      color: 'white',
-                    }}
-                  >
-                    CR Name
-                  </span>
-                ))}
-              </div>
-          </div>
+                    <h1 style={{ margin: '0 0 4px', fontSize: '15px' }}>
+                        {user.email}
+                    </h1>
+                    <p style={{ fontSize: '14px', opacity: 0.8 }}>Role: {user.role}</p>
 
-          {/* ── Reviews Section ── */}
-          <div style={{
-            background: '#EDE5D5',
-            borderRadius: '12px',
-            padding: '20px 24px',
-            
-          }}>
+                    {editingProfile ? (
+                        <>
+                        <label style={labelStyle}>Description</label>
+                        <textarea
+                            value={desc}
+                            onChange={(e) => setDesc(e.target.value)}
+                            placeholder={`${user.description || ""}`}
+                            rows={4}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #948979', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+                        />
 
-            {/* Header row: title + sort dropdown */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
-                Reviews
-              </h2>
+                        <button onClick={() => handleSaveProfile(desc)} style={pillBtn('#c8e6c9', '#2e7d32')}>
+                            Save
+                        </button>
+                        <button onClick={() => setEditingProfile(false)} style={pillBtn('#ffcdd2', '#c62828')}>
+                            Cancel
+                        </button>
+                        </>
+                    ) : (
+                        <>
+                        <p style={{ fontSize: '14px', opacity: 0.8 }}>{user.description}</p>
+                        <button onClick={() => handleEditProfile(pk)} style={pillBtn('#e3f2fd', '#1565c0')}>
+                            Edit Profile
+                        </button>
+                        </>
+                    )}
+                </div>
 
-              {/* Only show the sort dropdown if there's more than 1 review */}
-              {reviews.length > 1 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #948979',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              )}
+                {/* STATS / BADGES SECTION */}
+                <div style={{
+                    background: '#EDE5D5',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                    marginBottom: '20px',
+                }}>
+                    <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
+                        User Statistics
+                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                        <div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{reviews.length}</div>
+                            <div style={{ fontSize: '12px' }}>All-Time Reviews</div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{monthReviews.length}</div>
+                            <div style={{ fontSize: '12px' }}>Reviews This Month</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{
+                    background: '#EDE5D5',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                    marginBottom: '20px',
+                }}>
+                    <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
+                        Badges
+                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                        <div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{user.badges}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* USER'S ACTIVITY SECTION */}
+                <div style={{
+                    background: '#EDE5D5',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h2 style={{ margin: 0, fontSize: '18px', color: '#153448' }}>
+                            My Review History
+                        </h2>
+                    </div>
+
+                    {reviews.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
+                            You haven't written any reviews yet.
+                        </p>
+                    ) : (
+                        reviews
+                            .filter((r) => !reported.has(r.id))
+                            .map((review) => (
+                                <ReviewCard
+                                    key={review.id}
+                                    review={review}
+                                    currentUser={user.username}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                    onReport={handleReport}
+                                    onLike={() => {}}
+                                    onDislike={() => {}}
+                                />
+                            ))
+                    )}
+                </div>
             </div>
-
-            {/* The review form — only shown when showForm is true */}
-            {showForm && (
-              <ReviewForm
-                cr={sampleCR}
-                existingReview={editingReview}
-                onCancel={() => {
-                  setShowForm(false)
-                  setEditingReview(null)
-                }}
-              />
-            )}
-
-            {/* The list of reviews */}
-            {sortedReviews.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
-                No reviews yet. Be the first!
-              </p>
-            ) : (
-              sortedReviews
-                // Hide reported reviews
-                .filter((r) => !reported.has(r.id))
-                .map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    currentUser={CURRENT_USER}
-                    onEdit={handleEdit}
-                    onLike={handleLike}
-                    onDislike={handleDislike}
-                    onDelete={handleDelete}
-                    onReport={handleReport}
-                  />
-                ))
-            )}
-
-          </div>
         </div>
-      </div>
-    )
+    );
 };
 
-export default CRPage;
+function pillBtn(background, color) {
+  return {
+    padding: '3px 10px',
+    fontSize: '11px',
+    fontWeight: '500',
+    border: 'none',
+    borderRadius: '20px',
+    background,
+    color,
+    cursor: 'pointer',
+  }
+}
+
+const labelStyle = {
+  display: 'block',
+  fontSize: '12px',
+  fontWeight: '600',
+  color: '#666',
+  marginBottom: '8px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+}
+
+export default Profile;
+
