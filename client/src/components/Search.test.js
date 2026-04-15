@@ -49,8 +49,45 @@ describe('CR Search filters', () => {
   it('populates tags from real DB data', async () => {
     await renderSearch();
     await waitFor(() => {
-      expect(screen.getByText(/Bidet/)).toBeInTheDocument();
-      expect(screen.getByText(/Spacious/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Bidet/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Spacious/ })).toBeInTheDocument();
+    });
+  });
+
+  it('returns all CRs when all filters are at their defaults', async () => {
+    mockFetch(mockCRs);
+    await renderSearch();
+
+    expect(screen.getByDisplayValue('Select building')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Select status')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Any')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/type valid integer/i).value).toBe('');
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: /search/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+    });
+  });
+
+  it('shows all CRs on load without clicking Search', async () => {
+    mockFetch(mockCRs);
+    await renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
     });
   });
 
@@ -200,7 +237,25 @@ describe('CR Search filters', () => {
     });
   });
 
-  it('filters by tag', async () => {
+  it('filters by tag with no tags selected returns all CRs', async () => {
+    mockFetch(mockCRs);
+    await renderSearch();
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: /search/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+    });
+  });
+
+  it('filters by 1 tag (Bidet) returns only CRs that have it', async () => {
     mockFetch(mockCRs);
     await renderSearch();
 
@@ -214,9 +269,43 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+
       expect(screen.queryByText(/Arete — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/MVP — Floor 3/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SEC-A — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Faura — Floor/)).not.toBeInTheDocument();
     });
   });
+
+  it('filters by 2 tags (Bidet + Spacious) returns only CRs that have both', async () => {
+    mockFetch(mockCRs);
+    await renderSearch();
+
+    await waitFor(() => screen.getByText(/\+ Bidet/));
+
+    await act(async () => {
+      userEvent.click(screen.getByText(/\+ Bidet/));
+    });
+    await act(async () => {
+      userEvent.click(screen.getByText(/\+ Spacious/));
+    });
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: /search/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      
+      expect(screen.queryByText(/CTC — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Arete — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/MVP — Floor 3/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SEC-A — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Faura — Floor/)).not.toBeInTheDocument();
+    });
+  });
+
 
   it('shows "No CR matches found" when nothing matches', async () => {
     mockFetch(mockCRs);

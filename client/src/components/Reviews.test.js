@@ -80,6 +80,8 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('shiitake_username', 'TestUser');
   localStorage.setItem('shiitake_userID', '42');
+
+  localStorage.setItem('shiitake_token', 'mock-auth-token');
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

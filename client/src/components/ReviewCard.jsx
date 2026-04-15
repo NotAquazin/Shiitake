@@ -1,6 +1,6 @@
 import StarRating from './StarRating'
 
-function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdit, onDelete, onReport }) {
+function ReviewCard({ review, currentUser, currentVote, isLoggedIn, onLike, onDislike, onEdit, onDelete, onReport }) {
 
   const reviewId = review?.pk ?? review?.id
   const likes = review?.likes ?? 0
@@ -37,14 +37,26 @@ function ReviewCard({ review, currentUser, currentVote, onLike, onDislike, onEdi
 
         <button
           onClick={() => onLike(reviewId)}
-          style={pillBtn(currentVote === 'like' ? '#c8e6c9' : '#e8f5e9', '#2e7d32')}
+          disabled={!isLoggedIn}
+          title={!isLoggedIn ? 'Log in to vote' : undefined}
+          style={{
+            ...pillBtn(currentVote === 'like' ? '#c8e6c9' : '#e8f5e9', '#2e7d32'),
+            opacity: isLoggedIn ? 1 : 0.5,
+            cursor: isLoggedIn ? 'pointer' : 'not-allowed',
+          }}
         >
           👍 {likes}
         </button>
 
         <button
           onClick={() => onDislike(reviewId)}
-          style={pillBtn(currentVote === 'dislike' ? '#ffcdd2' : '#fce4ec', '#c62828')}
+          disabled={!isLoggedIn}
+          title={!isLoggedIn ? 'Log in to vote' : undefined}
+          style={{
+            ...pillBtn(currentVote === 'dislike' ? '#ffcdd2' : '#fce4ec', '#c62828'),
+            opacity: isLoggedIn ? 1 : 0.5,
+            cursor: isLoggedIn ? 'pointer' : 'not-allowed',
+          }}
         >
           👎 {dislikes}
         </button>

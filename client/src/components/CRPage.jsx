@@ -27,7 +27,15 @@ const CRPage = () => {
   const [editingReview, setEditingReview] = useState(null)
   const [sortBy,        setSortBy]        = useState('Newest')
   const [reported,      setReported]      = useState(new Set())
-  const [userVotes,     setUserVotes]     = useState({})
+  const [userVotes,     setUserVotes]     = useState(() => {
+    const username = localStorage.getItem('shiitake_username') || '';
+    if (!username || !localStorage.getItem('shiitake_token')) return {};
+    try {
+      return JSON.parse(localStorage.getItem(`shiitake_votes_${username}`) || '{}');
+    } catch {
+      return {};
+    }
+  })
   const [liveAmenities, setLiveAmenities] = useState(null)
 
   const currentUsername = localStorage.getItem('shiitake_username') || 'Anonymous';
@@ -76,8 +84,8 @@ const CRPage = () => {
     loadCR();
       }, [pk]); // Re-run if the primary key changes
 
-// The logged-in user's name. Replace with real auth later.
-  const CURRENT_USER = currentUsername
+  const isLoggedIn = !!localStorage.getItem('shiitake_token');
+  const CURRENT_USER = localStorage.getItem('shiitake_username') || currentUsername
 
   const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
 
@@ -113,7 +121,7 @@ const CRPage = () => {
               rating: reviewData.rating,
               comment: reviewData.text,
               reviewTags: reviewData.amenities,
-              author: reviewData.author,
+              author: currentUsername,
             }),
           })
 
@@ -168,6 +176,10 @@ const CRPage = () => {
     }
 
     async function applyVote(reviewId, nextVote) {
+      if (!isLoggedIn) {
+        alert('Please log in to like or dislike reviews.')
+        return
+      }
       const prevVote = userVotes[reviewId]
       if (prevVote === nextVote) return
 
@@ -201,6 +213,11 @@ const CRPage = () => {
 
           if (!nextVote) {
             delete updated[reviewId]
+          }
+
+          const username = localStorage.getItem('shiitake_username') || ''
+          if (username) {
+            localStorage.setItem(`shiitake_votes_${username}`, JSON.stringify(updated))
           }
 
           return updated
@@ -294,7 +311,7 @@ const CRPage = () => {
               <p style={{ margin: '0 0 4px', fontSize: '12px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Average Rating ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
               </p>
-              <StarRating rating={Math.round(avgRating)} interactive={false} />
+              <StarRating rating={avgRating} interactive={false} />
             </div>
 
             {/* Amenities */}
@@ -310,7 +327,8 @@ const CRPage = () => {
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: '500',
-                    background: '#d4edda'
+                    background: '#d4edda',
+                    color: '#155724',
                   }}
                 >
                   {amenity}
@@ -353,8 +371,13 @@ const CRPage = () => {
               )}
             </div>
 
-            {/* Leave a review button (hidden while the form is open) */}
-            {!showForm && (
+            {/* Leave a review button (only for logged-in users, hidden while the form is open) */}
+            {!showForm && !isLoggedIn && (
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '13px', marginBottom: '16px' }}>
+                <a href="/login" style={{ color: '#153448', fontWeight: '700' }}>Log in</a> to leave a review.
+              </p>
+            )}
+            {!showForm && isLoggedIn && (
               <button
                 onClick={handleClickLeaveReview}
                 style={{
@@ -404,6 +427,7 @@ const CRPage = () => {
                     review={review}
                     currentUser={CURRENT_USER}
                     currentVote={userVotes[getReviewId(review)] || null}
+                    isLoggedIn={isLoggedIn}
                     onLike={handleLike}
                     onDislike={handleDislike}
                     onEdit={handleEdit}

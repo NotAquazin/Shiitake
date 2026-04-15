@@ -11,6 +11,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import userPng from "./userIcon.png";
+import StarRating from "./StarRating";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -45,11 +46,25 @@ const Map = () => {
         try {
             const crRes = await fetch('http://localhost:13000/CRs');
             const crData = await crRes.json();
-            setCRs(crData);
 
-            const revRes = await fetch('/reviews');
+            const revRes = await fetch('http://localhost:13000/reviews');
             const allReviews = await revRes.json();
 
+            const enhancedCRs = crData.map(cr => {
+                const crReviews = allReviews.filter(r => r.CRId === cr.id);
+                let computedRating = cr.averageRating || 0;
+                if (crReviews.length > 0) {
+                    const sum = crReviews.reduce((acc, curr) => acc + curr.rating, 0);
+                    computedRating = sum / crReviews.length;
+                }
+                return {
+                    ...cr,
+                    computedRating: parseFloat(Number(computedRating).toFixed(1)),
+                    reviewCount: crReviews.length
+                };
+            });
+
+            setCRs(enhancedCRs);
             setLoading(false);
         } catch (err) {
             console.error("Fetch error:", err);
@@ -108,7 +123,17 @@ const Map = () => {
           <Popup>
             <div style={{ width: "250px", fontFamily: "Arial, sans-serif" }}>
               <h3>{cr.name || "Unknown CR"}</h3>
-              <p><strong>Building: </strong>{cr.building || "Unknown Building"}</p>
+              
+              <div style={{ marginBottom: '12px' }}>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', fontWeight: 600 }}>
+                  Average Rating ({cr.reviewCount || 0} reviews)
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                  <StarRating rating={cr.computedRating || 0} interactive={false} />
+                </div>
+              </div>
+
+              <p style={{ margin: '0 0 4px' }}><strong>Building: </strong>{cr.building || "Unknown Building"}</p>
               <p><strong>Floor:</strong> {cr.floor || "N/A"}</p>
               <p><strong>Status:</strong> {cr.status}</p>
 

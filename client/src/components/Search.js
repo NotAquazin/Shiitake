@@ -26,7 +26,7 @@ function Search() {
   // Search results
   const [results, setResults] = useState(null);
 
-  // On mount: fetch all CRs once to populate the Building dropdown and tag chips
+  // On mount: fetch all CRs to populate filter options and show default results
   useEffect(() => {
     fetch(`${API_URL}/crs`)
       .then((res) => res.json())
@@ -35,6 +35,7 @@ function Search() {
         const tags = [...new Set(data.flatMap((cr) => Array.isArray(cr.tags) ? cr.tags : []))].sort();
         setAllBuildings(buildings);
         setAllTags(tags);
+        setResults(data);
       })
       .catch((err) => console.error('Failed to load filter options:', err));
   }, []);

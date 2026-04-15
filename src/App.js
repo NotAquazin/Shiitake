@@ -6,14 +6,13 @@ import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
-import Leaderboard from "./components/Leaderboard";
 
 const Home = () => {
   const token = localStorage.getItem('shiitake_token');
 
   return (
     <div className="container mt-5">
-      <h1 className="text-center mb-4">Shiitake CR Navigator</h1>
+      <h1 className="text-center mb-4" style={{ fontFamily: "'Roboto', sans-serif", fontWeight: 700, color: '#153448' }}>Shiitake CR Map</h1>
       {token ? (
         <InteractiveMap />
       ) : (
@@ -51,9 +50,6 @@ const App = () => {
               <li className="nav-item">
                     <Link className="nav-link" to="/search">Search</Link>
               </li>
-              <li className="nav-item">
-                    <Link className="nav-link" to="/leaderboard">Leaderboard</Link>
-              </li>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item">
@@ -87,7 +83,6 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile/:pk" element={<Profile />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/cr/:pk" element={<CRPage />} /> 
       </Routes>
     </Router>
