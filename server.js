@@ -37,8 +37,58 @@ sequelize.sync({ alter: true })
     console.error('❌ Error synchronizing the database:', error);
   });
 
+const jwt = require('jsonwebtoken');
+
 const app = express()
 app.use(express.json())
+
+// Middleware: decodes the JWT, checks role === 'admin'
+// Usage: app.put('/some-route', requireAdmin, handler)
+function requireAdmin(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided.' });
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required.' });
+        }
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Invalid token.' });
+    }
+}
+
+// Middleware: allows the request if caller is admin OR owns the review (checked by UserId on the review)
+// Usage: app.delete('/reviews/:id', requireAdminOrAuthor, handler)
+async function requireAdminOrAuthor(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided.' });
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        req.user = decoded;
+        if (decoded.role === 'admin') {
+            return next();
+        }
+        // Not admin — check if they own the review
+        const review = await Review.findByPk(req.params.id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+        if (review.UserId !== decoded.user_id) {
+            return res.status(403).json({ error: 'You can only delete your own reviews.' });
+        }
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Invalid token.' });
+    }
+}
 
 // CORS allows clients to make requests to the server, even if they originate from different domains
 const cors = require('cors');
@@ -146,6 +196,24 @@ app.get('/crs/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// PUT a CR's status and/or tags (admin only)
+app.put('/crs/:id', requireAdmin, async (req, res) => {
+    try {
+        const cr = await CR.findByPk(req.params.id);
+        if (!cr) return res.status(404).json({ error: 'CR not found' });
+
+        const updates = {};
+        if (req.body.status !== undefined) updates.status = req.body.status;
+        if (req.body.tags   !== undefined) updates.tags   = req.body.tags;
+
+        await cr.update(updates);
+        return res.status(200).json({ message: 'CR updated successfully!', cr });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // PATCH a CR's tags
 app.patch('/crs/:id', async (req, res) => {
     try {
@@ -231,7 +299,7 @@ app.put('/reviews/:id', async (req, res) => {
     }
 });
 
-app.delete('/reviews/:id', async (req, res) => {
+app.delete('/reviews/:id', requireAdminOrAuthor, async (req, res) => {
     try {
         const review = await Review.findByPk(req.params.id);
         if (!review) return res.status(404).json({ error: 'Review not found' });
@@ -240,6 +308,34 @@ app.delete('/reviews/:id', async (req, res) => {
         await review.destroy();
         if (CRId) await recalcAverageRating(CRId);
         return res.status(200).json({ message: 'Review deleted successfully!' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// Flag a review as reported (any user)
+app.patch('/reviews/:id/report', async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        await review.update({ reported: true });
+        return res.status(200).json({ message: 'Review reported.', review });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// Clear the reported flag to keep the review (admin only)
+app.patch('/reviews/:id/clear-report', requireAdmin, async (req, res) => {
+    try {
+        const review = await Review.findByPk(req.params.id);
+        if (!review) return res.status(404).json({ error: 'Review not found' });
+
+        await review.update({ reported: false });
+        return res.status(200).json({ message: 'Report cleared.', review });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: err.message });
