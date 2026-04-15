@@ -27,7 +27,88 @@ const userIcon = L.icon({
     iconSize:     [30, 30], 
     iconAnchor:   [15, 20],
 });
+const CRPopupContent = ({ crGroup, onNavigate, onLeaveReview }) => {
+  const [selectedCrId, setSelectedCrId] = useState(crGroup[0].id);
 
+  useEffect(() => {
+    if (!crGroup.find(cr => String(cr.id) === String(selectedCrId))) {
+      setSelectedCrId(crGroup[0].id);
+    }
+  }, [crGroup, selectedCrId]);
+
+  const activeCR = crGroup.find(cr => String(cr.id) === String(selectedCrId)) || crGroup[0];
+
+  return (
+    <div style={{ width: "250px", fontFamily: "Arial, sans-serif" }}>
+      <h3>{activeCR.name || "Unknown CR"}</h3>
+      
+      <div style={{ marginBottom: '12px' }}>
+        <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', fontWeight: 600 }}>
+          Average Rating ({activeCR.reviewCount || 0} reviews)
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+          <StarRating rating={activeCR.computedRating || 0} interactive={false} />
+        </div>
+      </div>
+
+      <p style={{ margin: '0 0 4px' }}><strong>Building: </strong>{activeCR.building || "Unknown Building"}</p>
+      
+      <div style={{ margin: '0 0 10px' }}>
+        <strong>Floor:</strong>{' '}
+        {crGroup.length > 1 ? (
+          <select 
+            value={activeCR.id} 
+            onChange={(e) => setSelectedCrId(e.target.value)}
+            style={{ marginLeft: '5px', padding: '3px', borderRadius: '4px', maxWidth: '200px' }}
+          >
+            {[...crGroup].sort((a, b) => a.floor - b.floor).map(cr => (
+              <option key={cr.id} value={cr.id}>
+                {`Floor ${cr.floor} - ${cr.name}`}
+              </option>
+            ))}
+          </select>
+        ) : (
+          activeCR.floor || "N/A"
+        )}
+      </div>
+
+      <p style={{ margin: '0 0 10px' }}><strong>Status:</strong> {activeCR.status}</p>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '10px' }}>
+        {activeCR.tags && activeCR.tags.map((amenity) => (
+          <span
+            key={amenity}
+            style={{
+              padding: '3px 10px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '500',
+              background: '#d4edda'
+            }}
+          >
+          {amenity}
+          </span>
+        ))}
+      </div>
+      
+      {activeCR.description && <p style={{ fontSize: '13px', marginBottom: '12px' }}>{activeCR.description}</p>}
+
+      <button 
+        className="btn btn-primary btn-sm w-100"
+        onClick={() => onLeaveReview(activeCR.id)}
+      >
+        See Reviews
+      </button>
+
+      <button 
+        className="btn btn-primary btn-sm w-100 mt-2"
+        onClick={() => onNavigate(activeCR)}
+      >
+        Navigate
+      </button>
+    </div>
+  );
+};
 
 const Map = () => {
   const [crs, setCRs] = useState([]); 
@@ -101,6 +182,16 @@ const Map = () => {
     
   };
 
+  const groupedCRs = React.useMemo(() => {
+    const groups = {};
+    crs.forEach((cr) => {
+      const key = `${cr.latitude},${cr.longitude}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(cr);
+    });
+    return Object.values(groups);
+  }, [crs]);
+
   if (!position || !userPosition ) return <p>Loading map...</p>;
 
   return (
@@ -115,65 +206,23 @@ const Map = () => {
         attribution="&copy; OpenStreetMap contributors"
       />
 
-        {crs.map((cr) => (
-          <Marker 
-            key={cr.id} 
-            position={[cr.latitude, cr.longitude]}
-          >
-          <Popup>
-            <div style={{ width: "250px", fontFamily: "Arial, sans-serif" }}>
-              <h3>{cr.name || "Unknown CR"}</h3>
-              
-              <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', fontWeight: 600 }}>
-                  Average Rating ({cr.reviewCount || 0} reviews)
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-                  <StarRating rating={cr.computedRating || 0} interactive={false} />
-                </div>
-              </div>
-
-              <p style={{ margin: '0 0 4px' }}><strong>Building: </strong>{cr.building || "Unknown Building"}</p>
-              <p><strong>Floor:</strong> {cr.floor || "N/A"}</p>
-              <p><strong>Status:</strong> {cr.status}</p>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {cr.tags.map((amenity) => (
-                  <span
-                    key={amenity}
-                    style={{
-                      padding: '3px 10px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      background: '#d4edda'
-                    }}
-                  >
-                  {amenity}
-                  </span>
-                ))}
-              </div>
-              
-              <p>{cr.description}</p>
-
-              <button 
-                className="btn btn-primary btn-sm w-100"
-                onClick={() => handleLeaveReviewClick(cr.id)}
-              >
-                See Reviews
-              </button>
-
-              <button 
-                className="btn btn-primary btn-sm w-100 mt-2"
-                onClick={() => handleNavigation(cr)}
-              >
-                Navigate
-              </button>
-          </div>
-        </Popup>
-      </Marker>
-      ))
-    }
+        {groupedCRs.map((crGroup) => {
+          const firstCr = crGroup[0];
+          return (
+            <Marker 
+              key={`${firstCr.latitude},${firstCr.longitude}`} 
+              position={[firstCr.latitude, firstCr.longitude]}
+            >
+              <Popup>
+                <CRPopupContent 
+                  crGroup={crGroup} 
+                  onNavigate={handleNavigation} 
+                  onLeaveReview={handleLeaveReviewClick} 
+                />
+              </Popup>
+            </Marker>
+          );
+        })}
 
     <Marker 
           position={userPosition}
