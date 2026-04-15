@@ -37,7 +37,7 @@ function StarRating({ rating, interactive, onRate }) {
         })}
         {rating > 0 && (
           <span style={{ fontSize: '13px', color: '#888', marginLeft: '4px' }}>
-            {rating}/5
+            {parseFloat(rating.toFixed(2))}/5
           </span>
         )}
       </div>
