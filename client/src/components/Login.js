@@ -38,6 +38,7 @@ const Login = () => {
         if (user && user.username) {
           localStorage.setItem('shiitake_username', user.username);
           localStorage.setItem('shiitake_userID', user.id);
+          localStorage.setItem('shiitake_role', user.role || 'user');
         }
         // Redirect to home and force reload to update navbar
         window.location.href = '/';

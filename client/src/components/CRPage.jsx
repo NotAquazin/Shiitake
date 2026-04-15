@@ -260,10 +260,19 @@ const CRPage = () => {
       }
     }
 
-    function handleReport(reviewId) {
-      // Add to the reported set so it disappears from the list
-      setReported(new Set([...reported, reviewId]))
-      alert('Review reported. Thank you!')
+    async function handleReport(reviewId) {
+      try {
+        const response = await fetch(`${API_BASE}/reviews/${reviewId}/report`, {
+          method: 'PATCH',
+        })
+        if (!response.ok) throw new Error('Failed to report review')
+        // Add to the reported set so it disappears from the list
+        setReported(new Set([...reported, reviewId]))
+        alert('Review reported. Thank you!')
+      } catch (error) {
+        console.error(error)
+        alert('Could not report review. Please try again.')
+      }
     }
 
     function handleClickLeaveReview() {
