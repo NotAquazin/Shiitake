@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import L from "leaflet";
 import { Link } from 'react-router-dom';
 
 const API_URL = '';
@@ -10,7 +11,6 @@ const STATUSES = [
 ];
 
 function Search() {
-
   // Filter values
   const [building,  setBuilding]  = useState('');
   const [distance,  setDistance]  = useState('');
@@ -18,6 +18,9 @@ function Search() {
   const [status,    setStatus]    = useState('');
   const [amenities, setAmenities] = useState([]);
   const [minRating, setMinRating] = useState('');
+  const [userPosition, setUserPosition] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(0);
+  const lastUpdateRef = useRef(0);
 
   // Options derived from real DB data
   const [allBuildings, setAllBuildings] = useState([]);
@@ -38,6 +41,21 @@ function Search() {
         setResults(data);
       })
       .catch((err) => console.error('Failed to load filter options:', err));
+
+      setUserPosition([14.6396, 121.0786]); 
+
+    // location tracking
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const coords = [pos.coords.latitude, pos.coords.longitude];
+        if (Date.now() - lastUpdateRef.current > 2000) {
+          setUserPosition(coords);
+          lastUpdateRef.current = Date.now();
+        }
+      }, );
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
   function toggleAmenity(label) {
@@ -74,12 +92,18 @@ function Search() {
           (cr) => cr.averageRating > 0 && cr.averageRating >= Number(minRating)
         );
       }
+      if (distance !== '' & userPosition != null) {
+        filtered = filtered.filter((cr) => {
+          const userLatLng = L.latLng(userPosition[0], userPosition[1]);
+          const crLatLng = L.latLng(cr.latitude, cr.longitude);
 
-      if (distance !== '') {
-        
+          const posDiff = userLatLng.distanceTo(crLatLng);
+          console.log(posDiff);
+          return posDiff <= distance;
+        })
       }
 
-      setResults(filtered);
+    setResults(filtered);
     } catch (err) {
       console.error('Failed to fetch CRs:', err);
       setResults([]);
@@ -107,11 +131,11 @@ function Search() {
             <label style={labelStyle}>Distance (m)</label>
             <input
               type="number"
-              placeholder="To add with GPS functionality"
+              placeholder={!userPosition ? "Enable locaiton tracking to use this filter" : "Type distance in meters"}
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
-              disabled
-              style={{ ...inputStyle, background: '#f0ece6', color: '#aaa', cursor: 'not-allowed' }}
+              style={inputStyle}
+              disabled={!userPosition}
             />
           </div>
 

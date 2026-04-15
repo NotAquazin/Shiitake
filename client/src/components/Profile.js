@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReviewCard from './ReviewCard';
 
 const API_BASE = '';
@@ -17,11 +17,93 @@ const Profile = () => {
     const now = new Date();
     const currentMonth = now.getMonth(); 
     const currentYear = now.getFullYear();
-    
+    const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+    ];
+
+    const [crs, setCRs] = useState([]);
+    const navigate = useNavigate();
+    const [userVotes,     setUserVotes]     = useState(() => {
+    const username = localStorage.getItem('shiitake_username') || '';
+    if (!username || !localStorage.getItem('shiitake_token')) return {};
+    try {
+      return JSON.parse(localStorage.getItem(`shiitake_votes_${username}`) || '{}');
+    } catch {
+      return {};
+    }
+  })
+    const isLoggedIn = !!localStorage.getItem('shiitake_token');
+
+    const BadgeCircle = ({ badgeString }) => {
+        // Splits string into badge rank and date
+        const [rank, month, year] = badgeString.split('_');
+        // Define colors and gradients for each tier
+        const tierStyles = {
+            Bronze: { 
+                grad: 'linear-gradient(135deg, #a77044 0%, #CD7F32 100%)', 
+                text: '#fff' 
+            },
+            Silver: { 
+                grad: 'linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%)', 
+                text: '#fff' 
+            },
+            Gold: { 
+                grad: 'linear-gradient(135deg, #f1c40f 0%, #f39c12 100%)', 
+                text: '#fff' 
+            },
+            Platinum: { 
+                grad: 'linear-gradient(135deg, #e5e4e2 0%, #b4b4b4 100%)', 
+                text: '#333' 
+            }
+        };
+
+        const currentStyle = tierStyles[rank] || { grad: '#ccc', text: '#fff' };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px' }}>
+            <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: currentStyle.grad,
+                color: currentStyle.text,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+                border: '2px solid rgba(255,255,255,0.3)',
+                marginBottom: '4px'
+            }}>
+                {rank.charAt(0)} {/* B, S, G, or P */}
+            </div>
+            <span style={{ fontSize: '10px', color: '#666', fontWeight: '500' }}>{month} {year}</span>
+        </div>
+    );
+};
+
+    function getReviewId(review) {
+        return review?.id
+    }
+
+    function mapReviewFromApi(review) {
+        return {
+            ...review,
+            id: getReviewId(review),
+            author: review.author || 'Anonymous',
+            text: review.text ?? review.comment ?? '',
+            timestamp: review.timestamp ?? (review.createdAt ? review.createdAt.split('T')[0] : ''),
+            likes: review.likes ?? 0,
+            dislikes: review.dislikes ?? 0,
+            amenities: Array.isArray(review.reviewTags) ? review.reviewTags : [],
+        }
+    }
+
     useEffect(() => {
         async function loadProfile() {
             try {
-                
 
                 // Use pk in the fetch URL
                 const userRes = await fetch(`${API_BASE}/users/${pk}`);
@@ -32,7 +114,7 @@ const Profile = () => {
                 const allReviews = await revRes.json();
                 
                 // Filter reviews using the primary key
-                const myReviews = allReviews.filter(r => r.UserId === parseInt(pk));
+                const myReviews = allReviews.filter(r => r.UserId === parseInt(pk)).map(mapReviewFromApi);
                 const myMonthReviews = myReviews.filter((r) => {
                     const reviewDate = new Date(r.createdAt); 
                     return (
@@ -52,6 +134,19 @@ const Profile = () => {
             }
         }
         loadProfile();
+
+        async function loadCR() {
+            try {
+                // Use pk in the fetch URL
+                const crRes = await fetch(`${API_BASE}/CRs`);
+                const crData = await crRes.json();
+                setCRs(crData);
+    
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+        loadCR();
     }, [pk]); 
 
     // HANDLERS 
@@ -73,6 +168,73 @@ const Profile = () => {
         if (window.confirm('Are you sure you want to delete this review?')) {
             setReviews(reviews.filter(r => r.id !== reviewId));
         }
+    };
+
+    async function applyVote(reviewId, nextVote) {
+      if (!isLoggedIn) {
+        alert('Please log in to like or dislike reviews.')
+        return
+      }
+      const prevVote = userVotes[reviewId]
+      if (prevVote === nextVote) return
+
+      try {
+        const response = await fetch(`${API_BASE}/reviews/${reviewId}/vote`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ previousVote: prevVote, nextVote }),
+        })
+
+        if (!response.ok) throw new Error('Failed to update vote')
+
+        const data = await response.json()
+        const nextLikes = data.review?.likes ?? 0
+        const nextDislikes = data.review?.dislikes ?? 0
+
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            getReviewId(review) === reviewId
+              ? { ...review, likes: nextLikes, dislikes: nextDislikes }
+              : review
+          )
+        )
+
+        setUserVotes((prev) => {
+          const updated = { ...prev }
+
+          if (nextVote) {
+            updated[reviewId] = nextVote
+          }
+
+          if (!nextVote) {
+            delete updated[reviewId]
+          }
+
+          const username = localStorage.getItem('shiitake_username') || ''
+          if (username) {
+            localStorage.setItem(`shiitake_votes_${username}`, JSON.stringify(updated))
+          }
+
+          return updated
+        })
+      } catch (error) {
+        console.error(error)
+        alert('Could not update vote. Please try again.')
+      }
+    }
+
+    function handleLike(reviewId) {
+      const currentVote = userVotes[reviewId]
+      applyVote(reviewId, currentVote === 'like' ? null : 'like')
+    }
+
+    function handleDislike(reviewId) {
+      const currentVote = userVotes[reviewId]
+      applyVote(reviewId, currentVote === 'dislike' ? null : 'dislike')
+    }
+
+    const handleReviewToCR = (review) => {
+        navigate(`/cr/${review.CRId}`); // Navigate to CR review page
     };
 
     async function handleSaveProfile(newDesc) {
@@ -106,18 +268,17 @@ const Profile = () => {
 
     async function handleUpdateBadges(reviews) {
         const newBadges = [];
-        if (reviews.length >= 5) { newBadges.push(`Bronze_${currentMonth}${currentYear}`) ;}
-        if (reviews.length >= 10) { newBadges.push(`Silver_${currentMonth}${currentYear}`) ;}
-        if (reviews.length >= 20) { newBadges.push(`Gold_${currentMonth}${currentYear}`) ;}
-        if (reviews.length >= 30) { newBadges.push(`Platinum_${currentMonth}${currentYear}`) ;}
-              console.log(newBadges);
+        if (reviews.length >= 5) { newBadges.push(`Bronze_${monthNames[currentMonth-1]}_${currentYear}`) ;}
+        if (reviews.length >= 10) { newBadges.push(`Silver_${monthNames[currentMonth-1]}_${currentYear}`) ;}
+        if (reviews.length >= 20) { newBadges.push(`Gold_${monthNames[currentMonth-1]}_${currentYear}`) ;}
+        if (reviews.length >= 30) { newBadges.push(`Platinum_${monthNames[currentMonth-1]}_${currentYear}`) ;}
 
         try {
             const response = await fetch(`${API_BASE}/users/${pk}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              badges: newBadges
+            badges: newBadges
             }),
           });
 
@@ -143,8 +304,8 @@ const Profile = () => {
     if (!user) return <div style={{ textAlign: 'center', padding: '50px' }}>User not found in Supabase.</div>;
 
     return (
-        <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px', textAlign: 'center' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto'}}>
 
                 {/* USER INFO SECTION */}
                 <div style={{
@@ -153,6 +314,7 @@ const Profile = () => {
                     padding: '20px 24px',
                     marginBottom: '20px',
                     color: 'white',
+                    textAlign: 'center' 
                 }}>
                     <span style={{
                         width: '180px', height: '180px', borderRadius: '50%',
@@ -210,6 +372,7 @@ const Profile = () => {
                     borderRadius: '12px',
                     padding: '20px 24px',
                     marginBottom: '20px',
+                    textAlign: 'center' 
                 }}>
                     <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
                         User Statistics
@@ -232,12 +395,18 @@ const Profile = () => {
                     padding: '20px 24px',
                     marginBottom: '20px',
                 }}>
-                    <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448' }}>
+                    <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448', textAlign: 'center' }}>
                         Badges
                     </h2>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         <div>
-                            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{user.badges}</div>
+                            {user.badges.length > 0 ? (
+                                user.badges.map((badgeStr, index) => (
+                                    <BadgeCircle key={index} badgeString={badgeStr} />
+                                ))
+                            ) : (
+                                <p style={{ fontSize: '14px', color: '#999' }}>No badges yet!</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -259,21 +428,33 @@ const Profile = () => {
                             You haven't written any reviews yet.
                         </p>
                     ) : (
-                        reviews
+                        <>
+                        {reviews
                             .filter((r) => !reported.has(r.id))
+                            
                             .map((review) => (
-                                <ReviewCard
-                                    key={review.id}
-                                    review={review}
-                                    currentUser={user.username}
-                                    onEdit={handleEdit}
-                                    onDelete={handleDelete}
-                                    onReport={handleReport}
-                                    onLike={() => {}}
-                                    onDislike={() => {}}
-                                />
+                                <div key={review.id} className="review-wrapper" style={{ marginBottom: '20px' }}>
+                                    <button 
+                                        onClick={() => handleReviewToCR(review)} 
+                                        style={pillBtn('#e3f2fd', '#1565c0')}
+                                    >
+                                        {(crs.find(c => String(c.id) === String(review.CRId)).name)}
+                                    </button>
+                                    <ReviewCard
+                                        key={review.id}
+                                        review={review}
+                                        currentUser={user.username}
+                                        currentVote={userVotes[getReviewId(review)] || null}
+                                        isLoggedIn={isLoggedIn}
+                                        onEdit={() => handleReviewToCR(review)}
+                                        onDelete={handleDelete}
+                                        onReport={handleReport}
+                                        onLike={handleLike}
+                                        onDislike={handleDislike}
+                                    />
+                            </div>
                             ))
-                    )}
+                    }</>)}
                 </div>
             </div>
         </div>

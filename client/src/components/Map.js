@@ -76,7 +76,7 @@ const Map = () => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const coords = [pos.coords.latitude, pos.coords.longitude];
-        if (Date.now() - lastUpdate > 2000 && liveTracking) {
+        if (Date.now() - lastUpdateRef.current > 2000 && liveTracking) {
           setUserPosition(coords);
           lastUpdateRef.current = Date.now();
         }
