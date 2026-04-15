@@ -8,12 +8,12 @@ global.fetch = jest.fn();
 
 // Sample CR data matching the actual DB
 const mockCRs = [
-  { id: 1, building: 'MVP',   floor: 1, status: 'available',         averageRating: 4.5, tags: ['Bidet', 'Spacious'] },
-  { id: 2, building: 'Arete', floor: 2, status: 'closed',            averageRating: 2.0, tags: ['Soap'] },
-  { id: 3, building: 'MVP',   floor: 3, status: 'under maintenance', averageRating: 0,   tags: [] },
-  { id: 4, building: 'CTC',   floor: 1, status: 'available',         averageRating: 3.5, tags: ['Bidet'] },
-  { id: 5, building: 'SEC-A', floor: 2, status: 'available',         averageRating: 1.0, tags: [] },
-  { id: 6, building: 'Faura', floor: 1, status: 'available',         averageRating: 5.0, tags: [] },
+  { id: 1, building: 'MVP',   name: 'Alpha CR',   floor: 1, status: 'available',         averageRating: 4.5, tags: ['Bidet', 'Spacious'] },
+  { id: 2, building: 'Arete', name: 'Beta CR',    floor: 2, status: 'closed',            averageRating: 2.0, tags: ['Soap'] },
+  { id: 3, building: 'MVP',   name: 'Gamma CR',   floor: 3, status: 'under maintenance', averageRating: 0,   tags: [] },
+  { id: 4, building: 'CTC',   name: 'Delta CR',   floor: 1, status: 'available',         averageRating: 3.5, tags: ['Bidet'] },
+  { id: 5, building: 'SEC-A', name: 'Epsilon CR', floor: 2, status: 'available',         averageRating: 1.0, tags: [] },
+  { id: 6, building: 'Faura', name: 'Zeta CR',    floor: 1, status: 'available',         averageRating: 5.0, tags: [] },
 ];
 
 function mockFetch(data) {
@@ -68,12 +68,12 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
-      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Alpha CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Beta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Gamma CR/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Delta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Epsilon CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Zeta CR/)).toBeInTheDocument();
     });
   });
 
@@ -82,12 +82,12 @@ describe('CR Search filters', () => {
     await renderSearch();
 
     await waitFor(() => {
-      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
-      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Alpha CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Beta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Gamma CR/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Delta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Epsilon CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Zeta CR/)).toBeInTheDocument();
     });
   });
 
@@ -103,8 +103,8 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText(/Arete — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/CTC — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Arete — Beta CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/CTC — Delta CR/)).not.toBeInTheDocument();
     });
   });
 
@@ -118,8 +118,9 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText(/— Floor 2/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/— Floor 3/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Arete — Beta CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/MVP — Gamma CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SEC-A — Epsilon CR/)).not.toBeInTheDocument();
     });
   });
 
@@ -246,12 +247,12 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/Arete — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/MVP — Floor 3/)).toBeInTheDocument();
-      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/SEC-A — Floor 2/)).toBeInTheDocument();
-      expect(screen.getByText(/Faura — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Alpha CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Arete — Beta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Gamma CR/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Delta CR/)).toBeInTheDocument();
+      expect(screen.getByText(/SEC-A — Epsilon CR/)).toBeInTheDocument();
+      expect(screen.getByText(/Faura — Zeta CR/)).toBeInTheDocument();
     });
   });
 
@@ -269,13 +270,13 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
-      expect(screen.getByText(/CTC — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Alpha CR/)).toBeInTheDocument();
+      expect(screen.getByText(/CTC — Delta CR/)).toBeInTheDocument();
 
-      expect(screen.queryByText(/Arete — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/MVP — Floor 3/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/SEC-A — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Faura — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Arete — Beta CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/MVP — Gamma CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SEC-A — Epsilon CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Faura — Zeta CR/)).not.toBeInTheDocument();
     });
   });
 
@@ -296,13 +297,13 @@ describe('CR Search filters', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/MVP — Floor 1/)).toBeInTheDocument();
+      expect(screen.getByText(/MVP — Alpha CR/)).toBeInTheDocument();
       
-      expect(screen.queryByText(/CTC — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Arete — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/MVP — Floor 3/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/SEC-A — Floor/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Faura — Floor/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/CTC — Delta CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Arete — Beta CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/MVP — Gamma CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SEC-A — Epsilon CR/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Faura — Zeta CR/)).not.toBeInTheDocument();
     });
   });
 

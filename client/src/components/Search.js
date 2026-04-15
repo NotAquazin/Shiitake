@@ -202,7 +202,7 @@ function Search() {
                       {/* Card header */}
                       <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                          {cr.building} — Floor {cr.floor}
+                          {cr.building} — {cr.name}
                         </span>
                       </div>
 
