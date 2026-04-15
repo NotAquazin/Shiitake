@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import StarRating from './StarRating';
 import ReviewForm from './ReviewForm';
 import ReviewCard from './ReviewCard';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const API_BASE = '';
 
@@ -41,6 +41,8 @@ const CRPage = () => {
   const currentUsername = localStorage.getItem('shiitake_username') || 'Anonymous';
   const currentUserId = localStorage.getItem('shiitake_userID')
 
+  const navigate = useNavigate();
+
   function getReviewId(review) {
     return review?.pk ?? review?.id
   }
@@ -65,7 +67,6 @@ const CRPage = () => {
             const crRes = await fetch(`${API_BASE}/CRs/${pk}`);
             const crData = await crRes.json();
             setCR(crData);
-            console.log(crData);
 
             const revRes = await fetch(`${API_BASE}/reviews`);
             const allReviews = await revRes.json();
@@ -275,6 +276,14 @@ const CRPage = () => {
       setShowForm(true)
     }
 
+    function handleNavigate() {
+      navigate('/', {
+        state: {
+          cr: cr
+        }
+      } );
+    }
+
     // Render
 
     return (
@@ -291,6 +300,22 @@ const CRPage = () => {
           }}>
             <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
               {cr.building} — {cr.name}
+               <button
+                onClick={handleNavigate}
+                style={{
+                  padding: '10px',
+                  marginLeft: '16px',
+                  background: '#1ce989',
+                  color: '#153448',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                }}
+              >
+                Navigate
+              </button>
             </h1>
 
             {/* Availability badge */}
@@ -305,6 +330,8 @@ const CRPage = () => {
             }}>
               {cr.status}
             </span>
+
+           
 
             {/* Average rating */}
             <div style={{ marginBottom: '12px' }}>

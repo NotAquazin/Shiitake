@@ -110,7 +110,7 @@ const CRPopupContent = ({ crGroup, onNavigate, onLeaveReview }) => {
   );
 };
 
-const Map = () => {
+const Map = ({ targetCR }) => {
   const [crs, setCRs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [navigating, setNavigating] = useState(false);
@@ -160,6 +160,7 @@ const Map = () => {
         if (Date.now() - lastUpdateRef.current > 2000 && liveTracking) {
           setUserPosition(coords);
           lastUpdateRef.current = Date.now();
+          setLastUpdate(Date.now());
         }
       }, );
 
@@ -169,7 +170,13 @@ const Map = () => {
     return () => {
     navigator.geolocation.clearWatch(watchId);
   };
-  }, []); // Re-run if the primary key changes
+  }, []); 
+
+  useEffect(() => {
+   if (targetCR != null && crs.length > 0) {
+      handleNavigation(targetCR);
+    }
+  }, [targetCR, crs]); 
 
   const handleLeaveReviewClick = (crId) => {
     navigate(`/cr/${crId}`); // Navigate to CR review page
@@ -179,7 +186,6 @@ const Map = () => {
     setPosition([14.6396, 121.0786]);
     setDestination(cr);
     setNavigating(true);
-    
   };
 
   const groupedCRs = React.useMemo(() => {

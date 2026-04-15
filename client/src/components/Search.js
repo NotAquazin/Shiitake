@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import L from "leaflet";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const API_URL = '';
 
@@ -21,6 +21,7 @@ function Search() {
   const [userPosition, setUserPosition] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(0);
   const lastUpdateRef = useRef(0);
+  const navigate = useNavigate();
 
   // Options derived from real DB data
   const [allBuildings, setAllBuildings] = useState([]);
@@ -51,6 +52,7 @@ function Search() {
         if (Date.now() - lastUpdateRef.current > 2000) {
           setUserPosition(coords);
           lastUpdateRef.current = Date.now();
+          setLastUpdate(Date.now());
         }
       }, );
     return () => {
@@ -64,6 +66,14 @@ function Search() {
     } else {
       setAmenities([...amenities, label]);
     }
+  }
+
+  const handleNavigate = (cr) => {
+    navigate('/', {
+      state: {
+        cr: cr
+      }
+    } );
   }
 
   async function handleSearch() {
@@ -102,7 +112,7 @@ function Search() {
           return posDiff <= distance;
         })
       }
-
+      
     setResults(filtered);
     } catch (err) {
       console.error('Failed to fetch CRs:', err);
@@ -237,6 +247,7 @@ function Search() {
                         <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
                         <p><strong>Status:</strong> {cr.status}</p>
                         <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+                        
                       </div>
 
                     </div>

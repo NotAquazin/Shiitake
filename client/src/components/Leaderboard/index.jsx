@@ -7,9 +7,10 @@
 //   activeFilters - the currently applied filter values (for active-filter badge)
 //   sortBy        - how the list is sorted
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import L from "leaflet";
 
 import LeaderboardRow  from './components/LeaderboardRow'
 import FilterPanel     from './components/FilterPanel'
@@ -36,6 +37,9 @@ export default function Leaderboard() {
   const [activeFilters, setActiveFilters] = useState({ building: '', floor: '', distance: '', status: '', amenities: [] })
   const [sortBy,        setSortBy]        = useState('Highest Rated')
   const [loading,       setLoading]       = useState(true)
+  const [userPosition, setUserPosition] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(0);
+  const lastUpdateRef = useRef(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -45,7 +49,9 @@ export default function Leaderboard() {
         
         const crsData = crsRes.data;
         const revsData = revsRes.data;
-
+        
+        
+       
         const formattedCrs = crsData.map(cr => {
           const crReviews = revsData.filter(r => r.CRId === cr.id);
           let statusText = 'Open';
@@ -59,13 +65,20 @@ export default function Leaderboard() {
             calculatedRating = sum / crReviews.length;
           }
           calculatedRating = parseFloat(Number(calculatedRating).toFixed(1));
+          let crDistance = 999999;
+          if (userPosition != null) {
+            const userLatLng = L.latLng(userPosition[0], userPosition[1]);
+            const crLatLng = L.latLng(cr.latitude, cr.longitude);
+  
+            crDistance = userLatLng.distanceTo(crLatLng);
+          }
 
           return {
             id: cr.id,
             code: cr.name || 'Unknown',
             buildingName: cr.building || 'Unknown',
             floor: cr.floor || 0,
-            distance: 0, // Placeholder
+            distance: crDistance || 0,
             status: statusText,
             rating: calculatedRating,
             reviewCount: crReviews.length,
@@ -82,7 +95,21 @@ export default function Leaderboard() {
       }
     }
     fetchData();
-  }, []);
+
+    // location tracking
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const coords = [pos.coords.latitude, pos.coords.longitude];
+        if (Date.now() - lastUpdateRef.current > 2000) {
+          setUserPosition(coords);
+          lastUpdateRef.current = Date.now();
+          setLastUpdate(Date.now());
+        }
+      }, );
+    return () => {
+        navigator.geolocation.clearWatch(watchId);
+    };
+  }, [userPosition]);
 
   // Sort a copy of filtered (never mutate state directly)
   const sortedRestrooms = [...filtered].sort((a, b) => {
