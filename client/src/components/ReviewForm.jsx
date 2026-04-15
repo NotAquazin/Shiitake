@@ -1,33 +1,25 @@
 import { useState } from 'react'
 import StarRating from './StarRating'
 
-function ReviewForm({ cr, existingReview, onSubmit, onCancel, onAmenityChange }) {
+const ALL_AMENITIES = [
+  'Bidet', 'Handsoap', 'Soap', 'Trash', 'Dryer',
+  'Sink', 'Tissue', 'Shower', 'Stand fan', 'Changing area',
+]
+
+function ReviewForm({ existingReview, onSubmit, onCancel, onAmenityChange }) {
 
   function buildInitialAmenities() {
-    if (Array.isArray(existingReview?.amenities) && existingReview.amenities.length > 0) {
-      return existingReview.amenities
+    // When editing, restore previous selections; fill in any missing amenities as not working
+    if (existingReview) {
+      const prev = Array.isArray(existingReview.amenities) ? existingReview.amenities : []
+      return ALL_AMENITIES.map((label) => {
+        const match = prev.find((a) => a.label === label)
+        return match ? match : { label, working: false }
+      })
     }
-    if (Array.isArray(existingReview?.reviewTags) && existingReview.reviewTags.length > 0) {
-      return existingReview.reviewTags
-    }
-    // New review: pull from cr.tags (strings) and wrap into objects
-    if (Array.isArray(cr?.tags) && cr.tags.length > 0) {
-      return cr.tags.map((tag) =>
-        typeof tag === 'string' ? { label: tag, working: true } : tag
-      )
-    }
-    // Fallback: cr.amenities if it's already an array of objects
-    if (Array.isArray(cr?.amenities) && cr.amenities.length > 0) {
-      return cr.amenities
-    }
-    return []
+    // New review: all amenities start unselected
+    return ALL_AMENITIES.map((label) => ({ label, working: false }))
   }
-
-  // const initialAmenities = Array.isArray(existingReview?.amenities)
-  //   ? existingReview.amenities
-  //   : Array.isArray(cr?.amenities)
-  //     ? cr.amenities
-  //     : []
 
   // pre-fill if editing, otherwise start blank
   const [rating, setRating] = useState(existingReview ? existingReview.rating : 0)
@@ -78,36 +70,34 @@ function ReviewForm({ cr, existingReview, onSubmit, onCancel, onAmenityChange })
         <StarRating rating={rating} interactive={true} onRate={setRating} />
       </div>
 
-      {/* amenity toggles — click to flip working/broken */}
-      {amenities.length > 0 && (
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>Update Amenity Status</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {amenities.map((amenity, index) => (
-              <button
-                key={amenity.label}
-                onClick={() => toggleAmenity(index)}
-                title={amenity.working ? 'Mark as not working' : 'Mark as working'}
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  background: amenity.working ? '#d4edda' : '#f8d7da',
-                  color: amenity.working ? '#155724' : '#721c24',
-                }}
-              >
-                {amenity.working ? '✓' : '✗'} {amenity.label}
-              </button>
-            ))}
-          </div>
-          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888' }}>
-            Tap a tag to toggle whether it's currently working.
-          </p>
+      {/* amenity toggles — click to mark present or absent */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={labelStyle}>Amenities Present</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {amenities.map((amenity, index) => (
+            <button
+              key={amenity.label}
+              onClick={() => toggleAmenity(index)}
+              title={amenity.working ? 'Mark as not present' : 'Mark as present'}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '20px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '500',
+                background: amenity.working ? '#d4edda' : '#f8d7da',
+                color: amenity.working ? '#155724' : '#721c24',
+              }}
+            >
+              {amenity.working ? '✅' : '❌'} {amenity.label}
+            </button>
+          ))}
         </div>
-      )}
+        <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888' }}>
+          Tap to mark which amenities are present.
+        </p>
+      </div>
 
       {/* optional text box */}
       <div style={{ marginBottom: '16px' }}>
