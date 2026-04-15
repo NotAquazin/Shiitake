@@ -1,6 +1,6 @@
 import StarRating from './StarRating'
 
-function ReviewCard({ review, currentUser, currentVote, isLoggedIn, onLike, onDislike, onEdit, onDelete, onReport }) {
+function ReviewCard({ review, currentUser, currentVote, isLoggedIn, isAdmin, onLike, onDislike, onEdit, onDelete, onReport }) {
 
   const reviewId = review?.pk ?? review?.id
   const likes = review?.likes ?? 0
@@ -64,8 +64,15 @@ function ReviewCard({ review, currentUser, currentVote, isLoggedIn, onLike, onDi
         {/* pushes edit/delete/report to the right */}
         <div style={{ flex: 1 }} />
 
+        {/* admin: always show delete */}
+        {isAdmin && (
+          <button onClick={() => onDelete(reviewId)} style={pillBtn('#fce4ec', '#c62828')}>
+            Delete
+          </button>
+        )}
+
         {/* your own review, show edit and delete */}
-        {isMyReview && (
+        {!isAdmin && isMyReview && (
           <>
             <button onClick={() => onEdit(review)} style={pillBtn('#e3f2fd', '#1565c0')}>
               Edit
@@ -77,7 +84,7 @@ function ReviewCard({ review, currentUser, currentVote, isLoggedIn, onLike, onDi
         )}
 
         {/* someone else's review, show report */}
-        {!isMyReview && (
+        {!isAdmin && !isMyReview && (
           <button onClick={() => onReport(reviewId)} style={pillBtn('#fff3e0', '#e65100')}>
             Report
           </button>

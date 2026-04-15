@@ -81,7 +81,7 @@ module.exports = (User) => {
 
       // 3. Generate JWT
       const token = jwt.sign(
-        { user_id: user.id },
+        { user_id: user.id, role: user.role },
         process.env.JWT_SECRET || 'fallback_secret',
         { expiresIn: '24h' }
       );
@@ -90,7 +90,7 @@ module.exports = (User) => {
       return res.status(200).json({
         message: 'Login successful.',
         token,
-        user: { id: user.id, username: user.username, email: user.email }
+        user: { id: user.id, username: user.username, email: user.email, role: user.role }
       });
 
     } catch (error) {
