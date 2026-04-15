@@ -107,4 +107,52 @@ describe('Map Component', () => {
     
   });
 
+  it('groups CRs with the same coordinates and renders a sorted dropdown to switch between them', async () => {
+    const multiCRs = [
+      { id: 10, name: 'CR A', building: 'Bldg', floor: 2, status: 'Avail', tags: [], latitude: 10.0, longitude: 20.0 },
+      { id: 11, name: 'CR B', building: 'Bldg', floor: 1, status: 'Avail', tags: [], latitude: 10.0, longitude: 20.0 }
+    ];
+
+    fetch.mockImplementation((url) => {
+      if (url.includes('/CRs')) {
+        return Promise.resolve({ ok: true, json: async () => multiCRs });
+      }
+      if (url.includes('/reviews')) {
+        return Promise.resolve({ ok: true, json: async () => [] });
+      }
+      return Promise.reject(new Error(`Unknown URL: ${url}`));
+    });
+
+    await act(async () => {
+      render(
+        <MemoryRouter>
+          <Map />
+        </MemoryRouter>
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('leaflet-popup')).toBeInTheDocument();
+    });
+
+    const markers = screen.getAllByTestId('leaflet-marker');
+    expect(markers.length).toBe(2); 
+
+    const select = screen.getByRole('combobox');
+    expect(select).toBeInTheDocument();
+
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(2);
+    expect(options[0].textContent).toBe('Floor 1 - CR B');
+    expect(options[1].textContent).toBe('Floor 2 - CR A');
+
+    expect(screen.getByRole('heading', { name: 'CR A' })).toBeInTheDocument();
+
+    await act(async () => {
+      userEvent.selectOptions(select, '11');
+    });
+
+    expect(screen.getByRole('heading', { name: 'CR B' })).toBeInTheDocument();
+  });
+
 });
