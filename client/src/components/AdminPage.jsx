@@ -10,7 +10,9 @@ export default function AdminPage() {
   const [reviews,      setReviews]      = useState([])
   const [crEdits,      setCrEdits]      = useState({})   // { [crId]: { status, tags: string[] } }
   const [allTags,      setAllTags]      = useState([])   // global tag library across all CRs
-  const [newTagInputs, setNewTagInputs] = useState({})   // { [crId]: string } for the "add new tag" field
+  const [newTagInput, setNewTagInput] = useState('')   // { [crId]: string } for the "add new tag" field
+  const [selectedTagToDelete, setSelectedTagToDelete] = useState('') // for the remove tag
+  const [confirmingTagDelete, setConfirmingTagDelete] = useState(false)
   const [saving,       setSaving]       = useState({})   // { [crId]: true } while saving
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
@@ -31,21 +33,17 @@ export default function AdminPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [crsRes, revsRes] = await Promise.all([
+        const [crsRes, revsRes, tagsRes] = await Promise.all([
           fetch(`${API}/crs`),
           fetch(`${API}/reviews`),
+          fetch(`${API}/tags`),
         ])
         const crsData  = await crsRes.json()
         const revsData = await revsRes.json()
+        const tagsData = await tagsRes.json()
         setCrs(crsData)
         setReviews(revsData)
-
-        // Build global tag library from all CRs
-        const tagSet = new Set()
-        crsData.forEach(cr => {
-          if (Array.isArray(cr.tags)) cr.tags.forEach(t => tagSet.add(t))
-        })
-        setAllTags([...tagSet].sort())
+        setAllTags(Array.isArray(tagsData) ? tagsData : [])
 
         // Pre-populate edit state from current DB values
         const edits = {}
@@ -129,28 +127,42 @@ export default function AdminPage() {
   }
 
   // Remove a tag from the global tag library and deselect it from all CRs
-  function deleteTag(tag) {
-    setAllTags(prev => prev.filter(t => t !== tag))
-    setCrEdits(prev => {
-      const updated = {}
-      Object.keys(prev).forEach(id => {
-        updated[id] = { ...prev[id], tags: prev[id].tags.filter(t => t !== tag) }
+  async function deleteTag(tag) {
+    try {
+      const res = await fetch(`${API}/tags/${encodeURIComponent(tag)}`, {
+        method: 'DELETE',
+        headers: authHeader,
       })
-      return updated
-    })
+      if (!res.ok) throw new Error('Delete failed')
+      setAllTags(prev => prev.filter(t => t !== tag))
+      setCrEdits(prev => {
+        const updated = {}
+        Object.keys(prev).forEach(id => {
+          updated[id] = { ...prev[id], tags: prev[id].tags.filter(t => t !== tag) }
+        })
+        return updated
+      })
+    } catch (err) {
+      alert('Could not remove tag. Please try again.')
+    }
   }
 
-  // Add a brand-new tag to the global tag library and select it for this CR
-  function addNewTag(crId) {
-    const raw = (newTagInputs[crId] || '').trim()
-    if (!raw) return
-    setAllTags(prev => prev.includes(raw) ? prev : [...prev, raw].sort())
-    setCrEdits(prev => {
-      const current = prev[crId]?.tags || []
-      const updated = current.includes(raw) ? current : [...current, raw]
-      return { ...prev, [crId]: { ...prev[crId], tags: updated } }
-    })
-    setNewTagInputs(prev => ({ ...prev, [crId]: '' }))
+  // Add a brand-new tag to the global tag library
+  async function addNewTag() {
+    const raw = newTagInput.trim()
+    if (!raw || allTags.includes(raw)) return
+    try {
+      const res = await fetch(`${API}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader },
+        body: JSON.stringify({ name: raw }),
+      })
+      if (!res.ok) throw new Error('Add failed')
+      setAllTags(prev => [...prev, raw].sort())
+      setNewTagInput('')
+    } catch (err) {
+      alert('Could not add tag. Please try again.')
+    }
   }
 
   const allBuildings = [...new Set(crs.map(cr => cr.building).filter(Boolean))].sort()
@@ -200,8 +212,8 @@ export default function AdminPage() {
           <h2 style={sectionTitle}>CR Management</h2>
 
           {/* Filter bar */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
-            <div>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', marginBottom: '16px' }}>
+            <div style={{ flex: 1 }}>
               <label style={labelStyle}>Building</label>
               <select
                 value={filterBuilding}
@@ -222,7 +234,7 @@ export default function AdminPage() {
                 style={{ ...inputStyle, width: '80px' }}
               />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <label style={labelStyle}>Status</label>
               <select
                 value={filterStatus}
@@ -233,27 +245,75 @@ export default function AdminPage() {
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div style={{ alignSelf: 'flex-end', display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button onClick={handleSearch} style={{ ...searchBtn }}>Search</button>
               <button
-                onClick={handleSearch}
-                style={{ ...searchBtn }}
-              >
-                Search
-              </button>
-              <button
-                onClick={() => {
-                  setFilterBuilding('');
-                  setFilterFloor('');
-                  setFilterStatus('');
-                  setResults(crs);
-                  setCrPage(1);
-                }}
+                onClick={() => { setFilterBuilding(''); setFilterFloor(''); setFilterStatus(''); setResults(crs); setCrPage(1) }}
                 style={{ ...saveBtn, background: '#948979' }}
               >
                 Clear
               </button>
             </div>
           </div>
+
+          {/* Tag management row */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: confirmingTagDelete ? '0' : '16px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Add New Tag</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={newTagInput}
+                  onChange={e => setNewTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNewTag() } }}
+                  placeholder="Enter new tag…"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button onClick={addNewTag} style={{ ...saveBtn, alignSelf: 'auto' }}>Add Tag</button>
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Remove Tag from Library</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select
+                  value={selectedTagToDelete}
+                  onChange={e => setSelectedTagToDelete(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value=''>Select a tag…</option>
+                  {allTags.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <button
+                  onClick={() => { if (selectedTagToDelete) setConfirmingTagDelete(true) }}
+                  disabled={!selectedTagToDelete}
+                  style={{ ...saveBtn, background: selectedTagToDelete ? '#c62828' : '#ccc', cursor: selectedTagToDelete ? 'pointer' : 'not-allowed', alignSelf: 'auto' }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Confirmation — spans full width below both tag columns */}
+          {confirmingTagDelete && (
+            <div style={{ padding: '10px 12px', marginBottom: '16px', background: '#fce4ec', borderRadius: '6px', fontSize: '13px', color: '#c62828' }}>
+              Remove <strong>"{selectedTagToDelete}"</strong> from the library? This will deselect it from all CRs.
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <button
+                  onClick={() => { deleteTag(selectedTagToDelete); setSelectedTagToDelete(''); setConfirmingTagDelete(false) }}
+                  style={{ ...saveBtn, background: '#c62828', alignSelf: 'auto' }}
+                >
+                  Confirm Remove
+                </button>
+                <button
+                  onClick={() => { setSelectedTagToDelete(''); setConfirmingTagDelete(false) }}
+                  style={{ ...saveBtn, background: '#948979', alignSelf: 'auto' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {results.length === 0 && (
             <p style={{ color: '#999', textAlign: 'center', padding: '16px 0' }}>No CRs match the filters.</p>
@@ -265,14 +325,10 @@ export default function AdminPage() {
               cr={cr}
               crEdit={crEdits[cr.id]}
               allTags={allTags}
-              newTagInput={newTagInputs[cr.id] || ''}
               saving={!!saving[cr.id]}
               crReviews={reviews.filter(r => r.CRId === cr.id).map(mapReview)}
               onUpdateStatus={val => updateEdit(cr.id, 'status', val)}
               onToggleTag={tag => toggleTag(cr.id, tag)}
-              onDeleteTag={deleteTag}
-              onNewTagInputChange={val => setNewTagInputs(prev => ({ ...prev, [cr.id]: val }))}
-              onAddNewTag={() => addNewTag(cr.id)}
               onSave={() => handleSaveCR(cr.id)}
               onDeleteReview={handleDeleteReview}
             />
@@ -423,11 +479,11 @@ const searchBtn = {
 
 const REVIEWS_PER_PAGE = 5
 
-function CRRow({ cr, crEdit, allTags, newTagInput, saving, crReviews,
-                 onUpdateStatus, onToggleTag, onDeleteTag,
-                 onNewTagInputChange, onAddNewTag, onSave, onDeleteReview }) {
+function CRRow({ cr, crEdit, allTags, saving, crReviews,
+                 onUpdateStatus, onToggleTag, onSave, onDeleteReview }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [page, setPage] = useState(1)
+
 
   return (
     <div style={rowStyle}>
@@ -495,20 +551,12 @@ function CRRow({ cr, crEdit, allTags, newTagInput, saving, crReviews,
                   >
                     {active ? '✓ ' : ''}{tag}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteTag(tag)}
-                    title="Remove tag from library"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0 0 0 2px', fontSize: '11px', lineHeight: 1 }}
-                  >
-                    ✕
-                  </button>
                 </span>
               )
             })}
           </div>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
+          {/* <div style={{ display: 'flex', gap: '6px' }}>
             <input
               type="text"
               value={newTagInput}
@@ -524,7 +572,7 @@ function CRRow({ cr, crEdit, allTags, newTagInput, saving, crReviews,
             >
               Add
             </button>
-          </div>
+          </div> */}
         </div>
 
       </div>
@@ -583,7 +631,6 @@ function CRRow({ cr, crEdit, allTags, newTagInput, saving, crReviews,
           </div>
         )
       })()}
-
     </div>
   )
 }
