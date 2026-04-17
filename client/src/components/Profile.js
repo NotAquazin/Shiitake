@@ -438,7 +438,7 @@ const Profile = () => {
                                         onClick={() => handleReviewToCR(review)} 
                                         style={pillBtn('#e3f2fd', '#1565c0')}
                                     >
-                                        {(crs.find(c => String(c.id) === String(review.CRId)).name)}
+                                        {(crs.find(c => String(c.id) === String(review.CRId))?.name || 'Unknown CR')}
                                     </button>
                                     <ReviewCard
                                         key={review.id}

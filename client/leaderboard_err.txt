@@ -1,0 +1,318 @@
+
+> client@0.1.0 test
+> react-scripts test --watchAll=false Leaderboard
+
+FAIL src/components/Leaderboard/Leaderboard.test.js
+  Leaderboard filter panel
+    × shows the FilterPanel when "Filter Restrooms" button is clicked (43 ms)
+    × hides the FilterPanel and shows results after Apply Filter is clicked (6 ms)
+    × filters by building: selecting MVP hides non-MVP rows (7 ms)
+    × shows all rows when no amenities are selected (4 ms)
+    × filters by 1 amenity (Bidet): shows only CRs that have it (6 ms)
+    × filters by 2 amenities (Bidet + Soap): shows only CRs that have both (5 ms)
+    × filters by status: selecting Closed hides non-Closed rows (4 ms)
+    × filters by floor: selecting floor 3 hides other floors (3 ms)
+    × displays the empty state message when no restrooms match (11 ms)
+
+  ● Leaderboard filter panel › shows the FilterPanel when "Filter Restrooms" button is clicked
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › hides the FilterPanel and shows results after Apply Filter is clicked
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › filters by building: selecting MVP hides non-MVP rows
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › shows all rows when no amenities are selected
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › filters by 1 amenity (Bidet): shows only CRs that have it
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › filters by 2 amenities (Bidet + Soap): shows only CRs that have both
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › filters by status: selecting Closed hides non-Closed rows
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › filters by floor: selecting floor 3 hides other floors
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+  ● Leaderboard filter panel › displays the empty state message when no restrooms match
+
+    TypeError: Cannot read properties of undefined (reading 'watchPosition')
+
+    [0m [90m  98 |[39m
+     [90m  99 |[39m     [90m// location tracking[39m
+    [31m[1m>[22m[39m[90m 100 |[39m     [36mconst[39m watchId [33m=[39m navigator[33m.[39mgeolocation[33m.[39mwatchPosition(
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 101 |[39m       (pos) [33m=>[39m {
+     [90m 102 |[39m         [36mconst[39m coords [33m=[39m [pos[33m.[39mcoords[33m.[39mlatitude[33m,[39m pos[33m.[39mcoords[33m.[39mlongitude][33m;[39m
+     [90m 103 |[39m         [36mif[39m ([33mDate[39m[33m.[39mnow() [33m-[39m lastUpdateRef[33m.[39mcurrent [33m>[39m [35m2000[39m) {[0m
+
+      at src/components/Leaderboard/index.jsx:100:43
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25989:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:13249:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13336:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15484:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15718:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15476:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15439:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:15519:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:18432:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:17923:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at node_modules/react/cjs/react.development.js:847:21
+
+Test Suites: 1 failed, 1 total
+Tests:       9 failed, 9 total
+Snapshots:   0 total
+Time:        2.648 s
+Ran all test suites matching /Leaderboard/i.
