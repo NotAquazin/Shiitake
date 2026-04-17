@@ -46,17 +46,22 @@ function Search() {
       setUserPosition([14.6396, 121.0786]); 
 
     // location tracking
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const coords = [pos.coords.latitude, pos.coords.longitude];
-        if (Date.now() - lastUpdateRef.current > 2000) {
-          setUserPosition(coords);
-          lastUpdateRef.current = Date.now();
-          setLastUpdate(Date.now());
-        }
-      }, );
+    let watchId;
+    if (navigator.geolocation && navigator.geolocation.watchPosition) {
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const coords = [pos.coords.latitude, pos.coords.longitude];
+          if (Date.now() - lastUpdateRef.current > 2000) {
+            setUserPosition(coords);
+            lastUpdateRef.current = Date.now();
+            setLastUpdate(Date.now());
+          }
+        }, );
+    }
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      if (navigator.geolocation && navigator.geolocation.clearWatch && watchId !== undefined) {
+        navigator.geolocation.clearWatch(watchId);
+      }
     };
   }, []);
 
