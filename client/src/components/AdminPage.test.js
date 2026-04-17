@@ -102,6 +102,7 @@ async function renderAdmin() {
 
 beforeEach(() => {
   fetch.mockClear()
+  window.confirm = jest.fn(() => true)
 })
 
 afterEach(() => {
@@ -397,6 +398,54 @@ describe('Reported Reviews', () => {
     await waitFor(() => {
       expect(screen.getByText('Grace')).toBeInTheDocument()
       expect(screen.getByText('Terrible experience')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking "Keep (Ignore Report)" calls PATCH clear report and removes the review from the section', async () => {
+    const reportedReview = makeReview(99, 2, 'Grace', 2, 'Terrible experience', true)
+    setupFetch({ crs: CRS_10, reviews: [reportedReview] })
+    await renderAdmin()
+
+    await waitFor(() => expect(screen.getByText('Grace')).toBeInTheDocument())
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: 'Keep (Ignore Report)' }))
+    })
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:13000/reviews/99/clear-report',
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({ Authorization: 'Bearer fake-admin-token' }),
+        })
+      )
+      expect(screen.queryByText('Grace')).not.toBeInTheDocument()
+      expect(screen.getByText('No reported reviews.')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking Delete on a reported review calls DELETE /reviews/:id and removes it', async () => {
+    const reportedReview = makeReview(99, 2, 'Grace', 2, 'Terrible experience', true)
+    setupFetch({ crs: CRS_10, reviews: [reportedReview] })
+    await renderAdmin()
+
+    await waitFor(() => expect(screen.getByText('Grace')).toBeInTheDocument())
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    })
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:13000/reviews/99',
+        expect.objectContaining({
+          method: 'DELETE',
+          headers: expect.objectContaining({ Authorization: 'Bearer fake-admin-token' }),
+        })
+      )
+      expect(screen.queryByText('Grace')).not.toBeInTheDocument()
+      expect(screen.getByText('No reported reviews.')).toBeInTheDocument()
     })
   })
 })

@@ -247,8 +247,10 @@ const CRPage = () => {
     async function handleDelete(reviewId) {
       if (window.confirm('Delete your review?')) {
         try {
+          const token = localStorage.getItem('shiitake_token')
           const response = await fetch(`${API_BASE}/reviews/${reviewId}`, {
             method: 'DELETE',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
           })
 
           if (!response.ok) throw new Error('Failed to delete review')
