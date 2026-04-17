@@ -6,6 +6,7 @@ import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
+import AdminPage from "./components/AdminPage";
 
 const Home = () => {
   const token = localStorage.getItem('shiitake_token');
@@ -29,6 +30,7 @@ const App = () => {
   const username = localStorage.getItem('shiitake_username');
   const userID = localStorage.getItem('shiitake_userID');
   const isLoggedIn = !!localStorage.getItem('shiitake_token');
+  const isAdmin = localStorage.getItem('shiitake_role') === 'admin';
 
   const handleLogout = () => {
     localStorage.removeItem('shiitake_token');
@@ -64,6 +66,11 @@ const App = () => {
                   <li className="nav-item">
                       <Link className="nav-link" to={`/profile/${userID}`}>Profile</Link>
                   </li>
+                  {isAdmin && (
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/admin">Admin</Link>
+                    </li>
+                  )}
                   <li className="nav-item d-flex align-items-center">
                     <span className="navbar-text ms-3 text-white fw-bold me-3">Hello, {username || 'User'}</span>
                   </li>
@@ -83,7 +90,8 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile/:pk" element={<Profile />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/cr/:pk" element={<CRPage />} /> 
+        <Route path="/cr/:pk" element={<CRPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </Router>
   );
