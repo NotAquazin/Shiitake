@@ -16,8 +16,19 @@ const mockCRs = [
   { id: 6, building: 'Faura', name: 'Zeta CR',    floor: 1, status: 'available',         averageRating: 5.0, tags: [] },
 ];
 
-function mockFetch(data) {
-  fetch.mockResolvedValue({ json: async () => data });
+// Derive the expected global-tags response from CR mock data
+function tagsFromCRs(crs) {
+  return [...new Set(crs.flatMap(cr => Array.isArray(cr.tags) ? cr.tags : []))].sort();
+}
+
+function mockFetch(crData) {
+  const globalTags = tagsFromCRs(crData);
+  fetch.mockImplementation((url) => {
+    if (url && url.includes('/global-tags')) {
+      return Promise.resolve({ json: async () => globalTags });
+    }
+    return Promise.resolve({ json: async () => crData });
+  });
 }
 
 async function renderSearch() {

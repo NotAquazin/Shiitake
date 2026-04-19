@@ -1,31 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import StarRating from './StarRating'
 
-const ALL_AMENITIES = [
-  'Bidet', 'Handsoap', 'Soap', 'Trash', 'Dryer',
-  'Sink', 'Tissue', 'Shower', 'Stand fan', 'Changing area',
-]
-
 function ReviewForm({ existingReview, onSubmit, onCancel, onAmenityChange }) {
-
-  function buildInitialAmenities() {
-    // When editing, restore previous selections; fill in any missing amenities as not working
-    if (existingReview) {
-      const prev = Array.isArray(existingReview.amenities) ? existingReview.amenities : []
-      return ALL_AMENITIES.map((label) => {
-        const match = prev.find((a) => a.label === label)
-        return match ? match : { label, working: false }
-      })
-    }
-    // New review: all amenities start unselected
-    return ALL_AMENITIES.map((label) => ({ label, working: false }))
-  }
 
   // pre-fill if editing, otherwise start blank
   const [rating, setRating] = useState(existingReview ? existingReview.rating : 0)
   const [text, setText] = useState(existingReview ? existingReview.text : '')
-  const [amenities, setAmenities] = useState(buildInitialAmenities)
+  const [amenities, setAmenities] = useState([])
   const [error, setError] = useState('')
+
+  // Fetch the global tag list and initialise amenity toggles
+  useEffect(() => {
+    fetch('/global-tags')
+      .then(res => res.json())
+      .then(tagNames => {
+        const prev = existingReview && Array.isArray(existingReview.amenities)
+          ? existingReview.amenities
+          : []
+        const initialised = tagNames.map(label => {
+          const match = prev.find(a => a.label === label)
+          return match || { label, working: false }
+        })
+        setAmenities(initialised)
+      })
+      .catch(() => {})
+  }, [])
 
   // flip the working status of whichever amenity was clicked
   function toggleAmenity(index) {

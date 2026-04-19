@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import ReviewCard from './ReviewCard'
 
-const API = 'http://localhost:13000'
+const API = ''
 
 const STATUS_OPTIONS = ['available', 'under maintenance', 'closed']
 
@@ -36,7 +36,7 @@ export default function AdminPage() {
         const [crsRes, revsRes, tagsRes] = await Promise.all([
           fetch(`${API}/crs`),
           fetch(`${API}/reviews`),
-          fetch(`${API}/tags`),
+          fetch(`${API}/global-tags`),
         ])
         const crsData  = await crsRes.json()
         const revsData = await revsRes.json()
@@ -126,10 +126,10 @@ export default function AdminPage() {
     })
   }
 
-  // Remove a tag from the global tag library and deselect it from all CRs
+  // Remove a tag from the global library and deselect it from all CR edits
   async function deleteTag(tag) {
     try {
-      const res = await fetch(`${API}/tags/${encodeURIComponent(tag)}`, {
+      const res = await fetch(`${API}/global-tags/${encodeURIComponent(tag)}`, {
         method: 'DELETE',
         headers: authHeader,
       })
@@ -143,22 +143,26 @@ export default function AdminPage() {
         return updated
       })
     } catch (err) {
-      alert('Could not remove tag. Please try again.')
+      alert('Could not delete tag. Please try again.')
     }
   }
 
-  // Add a brand-new tag to the global tag library
+  // Add a new tag to the global library
   async function addNewTag() {
     const raw = newTagInput.trim()
     if (!raw || allTags.includes(raw)) return
     try {
-      const res = await fetch(`${API}/tags`, {
+      const res = await fetch(`${API}/global-tags`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({ name: raw }),
       })
-      if (!res.ok) throw new Error('Add failed')
-      setAllTags(prev => [...prev, raw].sort())
+      if (!res.ok) {
+        const data = await res.json()
+        if (res.status === 409) return // already exists — silently ignore
+        throw new Error(data.error || 'Add failed')
+      }
+      setAllTags(prev => [...prev, raw].sort((a, b) => a.localeCompare(b)))
       setNewTagInput('')
     } catch (err) {
       alert('Could not add tag. Please try again.')
