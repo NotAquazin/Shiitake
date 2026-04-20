@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import StarRating from './StarRating'
 
-function ReviewForm({ existingReview, onSubmit, onCancel, onAmenityChange }) {
+function ReviewForm({ cr, existingReview, onSubmit, onCancel, onAmenityChange }) {
 
   // pre-fill if editing, otherwise start blank
   const [rating, setRating] = useState(existingReview ? existingReview.rating : 0)
@@ -14,14 +14,18 @@ function ReviewForm({ existingReview, onSubmit, onCancel, onAmenityChange }) {
     fetch('/global-tags')
       .then(res => res.json())
       .then(tagNames => {
-        const prev = existingReview && Array.isArray(existingReview.amenities)
-          ? existingReview.amenities
-          : []
-        const initialised = tagNames.map(label => {
-          const match = prev.find(a => a.label === label)
-          return match || { label, working: false }
-        })
-        setAmenities(initialised)
+        if (existingReview) {
+          // Editing: restore previous review's amenity selections
+          const prev = Array.isArray(existingReview.amenities) ? existingReview.amenities : []
+          setAmenities(tagNames.map(label => {
+            const match = prev.find(a => a.label === label)
+            return match || { label, working: false }
+          }))
+        } else {
+          // New review: pre-check amenities the CR already has tagged
+          const crTags = Array.isArray(cr?.tags) ? cr.tags : []
+          setAmenities(tagNames.map(label => ({ label, working: crTags.includes(label) })))
+        }
       })
       .catch(() => {})
   }, [])
