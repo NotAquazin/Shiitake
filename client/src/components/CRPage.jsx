@@ -14,7 +14,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 const API_BASE = '';
 
 const CRPage = () => {
-  const { pk } = useParams(); // 'faura-1' in this example
+  const { pk } = useParams(); 
   const [cr, setCR] = useState({
     building: '',
     floor: '',
@@ -22,6 +22,7 @@ const CRPage = () => {
     tags: []
   });
   const [reviews, setReviews] = useState([]); 
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
   const [showForm,      setShowForm]      = useState(false)
   const [editingReview, setEditingReview] = useState(null)
@@ -68,15 +69,23 @@ const CRPage = () => {
             const crData = await crRes.json();
             setCR(crData);
 
-            const revRes = await fetch(`${API_BASE}/reviews`);
-            const allReviews = await revRes.json();
+            const revRes = await fetch(`${API_BASE}/reviews?CRId=${pk}`);
+            const revData = await revRes.json();
 
-            // Filter reviews using the primary key
-            const pkNumber = Number(pk);
-            const myReviews = allReviews.filter((r) => r.CRId === pkNumber || String(r.CRId) === String(pk)).map(mapReviewFromApi);
-            setReviews(myReviews);
+            const revArray = Array.isArray(revData) ? revData : [];
+            const reviews = revArray
+              .filter((r) => String(r.CRId) === String(pk)) 
+              .map(mapReviewFromApi);
 
+            setReviews(reviews);
+
+            if (currentUserId) {
+              const userRes = await fetch(`${API_BASE}/users/${currentUserId}`);
+              const userData = await userRes.json();
+              setUser(userData); 
+            }
             setLoading(false);
+          
         } catch (err) {
             console.error("Fetch error:", err);
             setLoading(false);
@@ -318,6 +327,36 @@ const CRPage = () => {
       } );
     }
 
+    async function handleToggleFavorite() {
+      const currentFavorites = user.favoriteCRs || []
+      let updatedFavorites; 
+      const isFavorite = user?.favoriteCRs?.some(favId => String(favId) === String(pk))
+      if (isFavorite)
+        updatedFavorites = currentFavorites.filter(favId => String(favId) !== String(pk));
+      else {
+        const newFavorite = [Number(pk)]
+        updatedFavorites = [...new Set([...currentFavorites, ...newFavorite])];
+      }
+      setUser({ ...user, favoriteCRs: updatedFavorites });
+      const previousUser = { ...user };
+
+      try {
+            const response = await fetch(`${API_BASE}/users/${currentUserId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            favoriteCRs: updatedFavorites
+            }),
+          });
+        if (!response.ok) throw new Error('Failed to add favorite')
+      } catch (error) {
+        console.error(error)
+        setUser(previousUser);
+        alert('Could not add favorite. Please try again.')
+      }
+    }
+
+    const isFavorite = user?.favoriteCRs?.some(favId => String(favId) === String(pk))
     // Render
 
     return (
@@ -332,30 +371,15 @@ const CRPage = () => {
             marginBottom: '20px',
             color: 'white',
           }}>
-            <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {cr.building} — {cr.name}
-               <button
-                onClick={handleNavigate}
-                style={{
-                  padding: '10px',
-                  marginLeft: '16px',
-                  background: '#1ce989',
-                  color: '#153448',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                }}
-              >
-                Navigate
-              </button>
+            {loading ? <h1 style={{ margin: '0 0 12px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>Fetching CR...</h1> : 
+            <><h1 style={{ margin: '0 0 12px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
+              {cr.building} — {cr.name}    
             </h1>
 
             {/* Availability badge */}
             <span style={{
               display: 'inline-block',
-              padding: '2px 12px',
+              padding: '6px 12px',
               borderRadius: '20px',
               fontSize: '12px',
               fontWeight: '600',
@@ -364,6 +388,43 @@ const CRPage = () => {
             }}>
               {cr.status}
             </span>
+            <button
+                onClick={handleNavigate}
+                style={{
+                  padding: '8px 10px',
+                  marginLeft: '16px',
+                  background: '#e6f0eb',
+                  color: '#153448',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '12px',
+                }}
+              >
+                Navigate
+              </button>
+              {isLoggedIn ? <><button
+                onClick={handleToggleFavorite}
+                style={{
+                  padding: '3px 8px',
+                  marginLeft: '16px',
+                  background: isFavorite
+                  ? '#d83110'  // blue if in favorites
+                  : '#e6f0eb', // white otherwise
+                  color: isFavorite
+                  ? '#e6f0eb'  // white if in favorites
+                  : '#153448', // blue otherwise
+                  border: 'none',
+                  borderRadius: '8px',
+                  align: 'center',  
+                  cursor: 'pointer',
+                  fontWeight: '1000',
+                  fontSize: '16px',
+                }}
+              >
+                ♡
+              </button></> : <></>}
 
            
 
@@ -395,9 +456,9 @@ const CRPage = () => {
                   {amenity}
                 </span>
               ))}
-            </div>
+            </div></>}
           </div>
-
+          
           {/* ── Reviews Section ── */}
           <div style={{
             background: '#EDE5D5',

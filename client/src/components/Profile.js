@@ -23,16 +23,22 @@ const Profile = () => {
     ];
 
     const [crs, setCRs] = useState([]);
+    const [favCRs, setFavCRs] = useState([]);
     const navigate = useNavigate();
+    const currentUsername = localStorage.getItem('shiitake_username') || '';
+    const currentUserID = localStorage.getItem('shiitake_userID')
+
     const [userVotes,     setUserVotes]     = useState(() => {
-    const username = localStorage.getItem('shiitake_username') || '';
-    if (!username || !localStorage.getItem('shiitake_token')) return {};
+
+    if (!currentUsername || !localStorage.getItem('shiitake_token')) return {};
     try {
-      return JSON.parse(localStorage.getItem(`shiitake_votes_${username}`) || '{}');
+      return JSON.parse(localStorage.getItem(`shiitake_votes_${currentUsername}`) || '{}');
     } catch {
       return {};
     }
+
   })
+
     const isLoggedIn = !!localStorage.getItem('shiitake_token');
 
     const BadgeCircle = ({ badgeString }) => {
@@ -106,15 +112,20 @@ const Profile = () => {
             try {
 
                 // Use pk in the fetch URL
-                const userRes = await fetch(`${API_BASE}/users/${pk}`);
+                const [userRes, revRes, crRes] = await Promise.all([
+                    fetch(`${API_BASE}/users/${pk}`),
+                    fetch(`${API_BASE}/reviews?UserId=${pk}`), // Filtered fetch
+                    fetch(`${API_BASE}/CRs`)
+                ]);
                 const userData = await userRes.json();
                 setUser(userData);
 
-                const revRes = await fetch(`${API_BASE}/reviews`);
-                const allReviews = await revRes.json();
-                
-                // Filter reviews using the primary key
-                const myReviews = allReviews.filter(r => r.UserId === parseInt(pk)).map(mapReviewFromApi);
+                const revData = await revRes.json();
+
+                const revArray = Array.isArray(revData) ? revData : [];
+                const myReviews = revArray
+                .filter((r) => String(r.UserId) === String(pk)) 
+                .map(mapReviewFromApi);
                 const myMonthReviews = myReviews.filter((r) => {
                     const reviewDate = new Date(r.createdAt); 
                     return (
@@ -125,7 +136,15 @@ const Profile = () => {
 
                 setReviews(myReviews);
                 setMonthReviews(myMonthReviews);
+                
                 handleUpdateBadges(myMonthReviews);
+                
+                const crData = await crRes.json();
+                setCRs(crData);
+                
+                if (user) {
+                    setFavCRs(crs.filter(cr => user.favoriteCRs.includes(cr.id)));
+                }
 
                 setLoading(false);
             } catch (err) {
@@ -134,29 +153,14 @@ const Profile = () => {
             }
         }
         loadProfile();
-
-        async function loadCR() {
-            try {
-                // Use pk in the fetch URL
-                const crRes = await fetch(`${API_BASE}/CRs`);
-                const crData = await crRes.json();
-                setCRs(crData);
-    
-            } catch (err) {
-                console.error("Fetch error:", err);
-            }
-        }
-        loadCR();
-    }, [pk]); 
+    }, [pk, user]); 
 
     // HANDLERS 
     const handleEditProfile = () => {
-        setEditingProfile(true);
-        setDesc(user.description || "");
-    };
-    
-    const handleEdit = (review) => {
-        console.log("Edit requested for review:", review.id);
+        if (pk == currentUserID) {
+            setEditingProfile(true);
+            setDesc(user.description || "");
+        }
     };
 
     const handleReport = (reviewId) => {
@@ -165,9 +169,22 @@ const Profile = () => {
     };
 
     const handleDelete = async (reviewId) => {
-        if (window.confirm('Are you sure you want to delete this review?')) {
-            setReviews(reviews.filter(r => r.id !== reviewId));
+        if (window.confirm('Delete your review?')) {
+        try {
+          const token = localStorage.getItem('shiitake_token')
+          const response = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+            method: 'DELETE',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          })
+
+          if (!response.ok) throw new Error('Failed to delete review')
+
+          setReviews((prev) => prev.filter((r) => getReviewId(r) !== reviewId))
+        } catch (error) {
+          console.error(error)
+          alert('Could not delete review. Please try again.')
         }
+      }
     };
 
     async function applyVote(reviewId, nextVote) {
@@ -210,9 +227,8 @@ const Profile = () => {
             delete updated[reviewId]
           }
 
-          const username = localStorage.getItem('shiitake_username') || ''
-          if (username) {
-            localStorage.setItem(`shiitake_votes_${username}`, JSON.stringify(updated))
+          if (currentUsername) {
+            localStorage.setItem(`shiitake_votes_${currentUsername}`, JSON.stringify(updated))
           }
 
           return updated
@@ -235,6 +251,10 @@ const Profile = () => {
 
     const handleReviewToCR = (review) => {
         navigate(`/cr/${review.CRId}`); // Navigate to CR review page
+    };
+
+    const handleCRPage = (crID) => {
+        navigate(`/cr/${crID}`); // Navigate to CR review page
     };
 
     async function handleSaveProfile(newDesc) {
@@ -268,10 +288,10 @@ const Profile = () => {
 
     async function handleUpdateBadges(reviews) {
         const newBadges = [];
-        if (reviews.length >= 5) { newBadges.push(`Bronze_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 10) { newBadges.push(`Silver_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 20) { newBadges.push(`Gold_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 30) { newBadges.push(`Platinum_${monthNames[currentMonth-1]}_${currentYear}`) ;}
+        if (reviews.length >= 5) { newBadges.push(`Bronze_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 10) { newBadges.push(`Silver_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 20) { newBadges.push(`Gold_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 30) { newBadges.push(`Platinum_${monthNames[currentMonth]}_${currentYear}`) ;}
 
         try {
             const response = await fetch(`${API_BASE}/users/${pk}`, {
@@ -283,7 +303,7 @@ const Profile = () => {
           });
 
         if (!response.ok) {
-                  const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
+            const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
 
             const errorData = await response.json();
             errorMsg = errorData.error || JSON.stringify(errorData);
@@ -359,9 +379,11 @@ const Profile = () => {
                     ) : (
                         <>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{user.description}</p>
+                        {pk == currentUserID ? 
                         <button onClick={() => handleEditProfile(pk)} style={pillBtn('#e3f2fd', '#1565c0')}>
-                            Edit Profile
+                            Edit Profile 
                         </button>
+                        : <></>}
                         </>
                     )}
                 </div>
@@ -398,16 +420,38 @@ const Profile = () => {
                     <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448', textAlign: 'center' }}>
                         Badges
                     </h2>
-                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
                             {user.badges.length > 0 ? (
-                                user.badges.map((badgeStr, index) => (
-                                    <BadgeCircle key={index} badgeString={badgeStr} />
-                                ))
-                            ) : (
-                                <p style={{ fontSize: '14px', color: '#999' }}>No badges yet!</p>
-                            )}
-                        </div>
+                            user.badges.map((badgeStr, index) => (
+                                <BadgeCircle key={index} badgeString={badgeStr} />
+                            ))
+                        ) : (
+                            <p style={{ fontSize: '14px', color: '#999' }}>No badges yet!</p>
+                        )}
+                    </div>
+                </div>
+
+                <div style={{
+                    background: '#EDE5D5',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                    marginBottom: '20px',
+                }}>
+                <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448', textAlign: 'center' }}>
+                        Favorite CRs
+                    </h2>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
+                            {favCRs.length > 0 ? (
+                            favCRs.map(cr => (
+                                 <button 
+                                        onClick={() => handleCRPage(cr.id)} 
+                                        style={pillBtn('#e3f2fd', '#1565c0')}>
+                                    {cr.building} — {cr.name}
+                                </button>
+                            ))
+                        ) : (
+                            <p style={{ fontSize: '14px', color: '#999' }}>No favorites yet!</p>
+                        )}
                     </div>
                 </div>
 
@@ -436,14 +480,26 @@ const Profile = () => {
                                 <div key={review.id} className="review-wrapper" style={{ marginBottom: '20px' }}>
                                     <button 
                                         onClick={() => handleReviewToCR(review)} 
-                                        style={pillBtn('#e3f2fd', '#1565c0')}
+                                        style={{ padding: '3px 10px',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                background: '#153448',
+                                                color: '#e3f2fd',
+                                                cursor: 'pointer'}}
                                     >
-                                        {(crs.find(c => String(c.id) === String(review.CRId))?.name || 'Unknown CR')}
+                                    {(() => {
+                                        const foundCR = crs.find(c => String(c.id) === String(review.CRId));
+                                        return foundCR 
+                                        ? `${foundCR.building} — ${foundCR.name}` 
+                                        : 'Unknown CR';
+                                    })()}
                                     </button>
                                     <ReviewCard
                                         key={review.id}
                                         review={review}
-                                        currentUser={user.username}
+                                        currentUser={currentUsername}
                                         currentVote={userVotes[getReviewId(review)] || null}
                                         isLoggedIn={isLoggedIn}
                                         onEdit={() => handleReviewToCR(review)}
@@ -464,7 +520,7 @@ const Profile = () => {
 function pillBtn(background, color) {
   return {
     padding: '3px 10px',
-    fontSize: '11px',
+    fontSize: '16px',
     fontWeight: '500',
     border: 'none',
     borderRadius: '20px',
