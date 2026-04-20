@@ -333,6 +333,87 @@ describe('CR Search filters', () => {
     });
   });
 
+});
+
+describe('CR Search pagination', () => {
+  const make17CRs = Array.from({ length: 17 }, (_, i) => ({
+    id: i + 1,
+    building: 'MVP',
+    name: `CR ${i + 1}`,
+    floor: 1,
+    status: 'available',
+    averageRating: 0,
+    tags: [],
+  }));
+
+  it('shows no pagination buttons when results fit on one page', async () => {
+    mockFetch(mockCRs); // only 6 CRs
+    await renderSearch();
+
+    await waitFor(() => screen.getByText(/MVP — Alpha CR/));
+
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
+  });
+
+  it('shows only 16 CRs on the first page when there are 17 results', async () => {
+    mockFetch(make17CRs);
+    await renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('link')).toHaveLength(16);
+    });
+    expect(screen.queryByRole('link', { name: /CR 17/ })).not.toBeInTheDocument();
+  });
+
+  it('shows pagination buttons when results exceed 16', async () => {
+    mockFetch(make17CRs);
+    await renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument();
+    });
+  });
+
+  it('navigating to page 2 shows the remaining CR', async () => {
+    mockFetch(make17CRs);
+    await renderSearch();
+
+    await waitFor(() => screen.getByRole('button', { name: '2' }));
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: '2' }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/MVP — CR 17/)).toBeInTheDocument();
+    });
+  });
+
+  it('resets to page 1 after a new search is run', async () => {
+    mockFetch(make17CRs);
+    await renderSearch();
+
+    await waitFor(() => screen.getByRole('button', { name: '2' }));
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: '2' }));
+    });
+
+    await waitFor(() => screen.getByText(/MVP — CR 17/));
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: /search/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('link')).toHaveLength(16);
+      expect(screen.queryByRole('link', { name: /CR 17/ })).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('CR Search misc', () => {
   it('result cards link to the correct CR page', async () => {
     mockFetch(mockCRs);
     await renderSearch();

@@ -16,18 +16,17 @@ const Home = () => {
   const targetCR = location.state?.cr || null;
 
   return (
-    <div className="container mt-5">
-      <h1 className="text-center mb-4" style={{ fontFamily: "'Roboto', sans-serif", fontWeight: 700, color: '#153448' }}>Shiitake CR Map</h1>
-      {token ? (
-        <InteractiveMap 
+    <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '24px 16px' }}>
+      <div className="container">
+        <div style={{ borderRadius: '12px', overflow: 'hidden', marginBottom: '20px' }}>
+          <div style={{ background: '#153448', padding: '20px 24px', textAlign: 'center' }}>
+            <h1 style={{ margin: 0, fontSize: '30px', fontFamily: 'Roboto', fontWeight: 700, color: 'white' }}>Shiitake CR Map</h1>
+          </div>
+          <InteractiveMap 
           targetCR={targetCR || null}
         />
-      ) : (
-        <div className="alert alert-info text-center">
-          <h4>Welcome to the Ateneo CR Navigator!</h4>
-          <p>Please <Link to="/login">Login</Link> or <Link to="/register">Register</Link> to view the interactive map.</p>
         </div>
-      )}
+      </div>
     </div>
   );
 };

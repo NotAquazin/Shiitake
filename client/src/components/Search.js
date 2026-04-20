@@ -243,6 +243,25 @@ function Search() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {results.map((cr) => (
                     <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)'}}>
+            : (() => {
+                const totalPages = Math.ceil(results.length / CRS_PER_PAGE);
+                const pageResults = results.slice((page - 1) * CRS_PER_PAGE, page * CRS_PER_PAGE);
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      {pageResults.map((cr) => (
+                        <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <div
+                            style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.transform = 'translateX(4px)'
+                              e.currentTarget.style.boxShadow = '-4px 0 0 #E8A020, 0 4px 18px rgba(0,0,0,0.12)'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.transform = 'translateX(0)'
+                              e.currentTarget.style.boxShadow = '2px 4px 14px rgba(0,0,0,0.18)'
+                            }}
+                          >
 
                       {/* Card header */}
                       <div style={{ background: '#153448', padding: '8px 16px', textAlign: 'center', minHeight: '80px', alignItems:'center', justifyContent: 'center', display: 'flex' }}>
@@ -250,6 +269,12 @@ function Search() {
                           {cr.building} — {cr.name}
                         </span>
                       </div>
+                            {/* Card header */}
+                            <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                              <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                                {cr.building} — {cr.name}
+                              </span>
+                            </div>
 
                       {/* Card body */}
                       <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
@@ -288,11 +313,49 @@ function Search() {
                           Navigate
                       </button>
                       </div>
+                            {/* Card body */}
+                            <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                              <p><strong>Building:</strong> {cr.building}</p>
+                              <p><strong>Floor:</strong> {cr.floor}</p>
+                              <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
+                              <p><strong>Status:</strong> {cr.status}</p>
+                              <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+                            </div>
 
                     </div>
                 ))}
               </div>
             )
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '24px' }}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                          <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            style={{
+                              padding: '4px 12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              background: p === page ? '#153448' : '#d9cdb8',
+                              color:      p === page ? 'white'   : '#3a3020',
+                            }}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()
         )}
 
       </div>

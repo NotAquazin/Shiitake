@@ -145,6 +145,47 @@ describe('CR Management — CR pagination', () => {
     await waitFor(() => expect(screen.getByText('Faura — CR 11')).toBeInTheDocument())
     expect(screen.queryByText('MVP — CR 1')).not.toBeInTheDocument()
   })
+
+  it('shows no pagination buttons when results fit on one page', async () => {
+    setupFetch({ crs: CRS_10 })
+    await renderAdmin()
+
+    await waitFor(() => expect(screen.getByText('MVP — CR 1')).toBeInTheDocument())
+
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument()
+  })
+
+  it('shows pagination buttons when results exceed 10', async () => {
+    setupFetch({ crs: CRS_15 })
+    await renderAdmin()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument()
+    })
+  })
+
+  it('resets to page 1 after a new search is run', async () => {
+    setupFetch({ crs: CRS_15 })
+    await renderAdmin()
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument())
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    await waitFor(() => expect(screen.getByText('Faura — CR 11')).toBeInTheDocument())
+
+    await act(async () => {
+      userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('MVP — CR 1')).toBeInTheDocument()
+      expect(screen.queryByText('Faura — CR 11')).not.toBeInTheDocument()
+    })
+  })
 })
 
 // =============================================================================
