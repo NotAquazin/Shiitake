@@ -1,6 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Login from './components/Login';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';import Login from './components/Login';
 import Register from './components/Register';
 import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
@@ -10,12 +9,16 @@ import AdminPage from "./components/AdminPage";
 
 const Home = () => {
   const token = localStorage.getItem('shiitake_token');
+  const location = useLocation();
+  const targetCR = location.state?.cr || null;
 
   return (
     <div className="container mt-5">
       <h1 className="text-center mb-4" style={{ fontFamily: "'Roboto', sans-serif", fontWeight: 700, color: '#153448' }}>Shiitake CR Map</h1>
       {token ? (
-        <InteractiveMap />
+        <InteractiveMap 
+          targetCR={targetCR || null}
+        />
       ) : (
         <div className="alert alert-info text-center">
           <h4>Welcome to the Ateneo CR Navigator!</h4>

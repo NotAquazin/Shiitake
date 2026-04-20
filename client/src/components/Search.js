@@ -84,6 +84,10 @@ function Search() {
     } );
   }
 
+  const handleSeeReviews = (cr) => {
+    navigate(`/cr/${cr.id}`);
+  }
+
   async function handleSearch() {
     try {
       const response = await fetch(`${API_URL}/crs`);
@@ -238,11 +242,10 @@ function Search() {
             : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {results.map((cr) => (
-                  <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)'}}>
 
                       {/* Card header */}
-                      <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                      <div style={{ background: '#153448', padding: '8px 16px', textAlign: 'center', minHeight: '80px', alignItems:'center', justifyContent: 'center', display: 'flex' }}>
                         <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
                           {cr.building} — {cr.name}
                         </span>
@@ -255,11 +258,38 @@ function Search() {
                         <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
                         <p><strong>Status:</strong> {cr.status}</p>
                         <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
-                        
+                        <button
+                          onClick={() => handleSeeReviews(cr)}
+                          style={{
+                            padding: '10px',
+                            marginRight: '5px',
+                            background: '#153448',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          See Reviews
+                      </button>
+                        <button
+                          onClick={() => handleNavigate(cr)}
+                          style={{
+                            padding: '10px',
+                            background: '#153448',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          Navigate
+                      </button>
                       </div>
 
                     </div>
-                  </Link>
                 ))}
               </div>
             )

@@ -346,50 +346,15 @@ const CRPage = () => {
             marginBottom: '20px',
             color: 'white',
           }}>
-            {loading ? <p>Loading CR...</p> : 
-            <><h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
-              {cr.building} — {cr.name}
-               <button
-                onClick={handleNavigate}
-                style={{
-                  padding: '10px',
-                  marginLeft: '16px',
-                  background: '#1ce989',
-                  color: '#153448',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                }}
-              >
-                Navigate
-              </button>
-              {isLoggedIn ? <><button
-                onClick={handleToggleFavorite}
-                style={{
-                  padding: '10px',
-                  marginLeft: '16px',
-                  background: isFavorite
-                  ? '#FFD700'  // yellow if in favorites
-                  : '#e6f0eb', // white otherwise
-                  color: '#153448',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                }}
-              >
-                {isFavorite ? '❤' : '♡'}
-              </button></> : <></>}
-              
+            {loading ? <h1 style={{ margin: '0 0 12px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>Fetching CR...</h1> : 
+            <><h1 style={{ margin: '0 0 12px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
+              {cr.building} — {cr.name}    
             </h1>
 
             {/* Availability badge */}
             <span style={{
               display: 'inline-block',
-              padding: '2px 12px',
+              padding: '6px 12px',
               borderRadius: '20px',
               fontSize: '12px',
               fontWeight: '600',
@@ -398,6 +363,42 @@ const CRPage = () => {
             }}>
               {cr.status}
             </span>
+            <button
+                onClick={handleNavigate}
+                style={{
+                  padding: '8px 10px',
+                  marginLeft: '16px',
+                  background: '#e6f0eb',
+                  color: '#153448',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '12px',
+                }}
+              >
+                Navigate
+              </button>
+              {isLoggedIn ? <><button
+                onClick={handleToggleFavorite}
+                style={{
+                  padding: '8px 16px',
+                  marginLeft: '16px',
+                  background: isFavorite
+                  ? '#4CAF50'  // blue if in favorites
+                  : '#e6f0eb', // white otherwise
+                  color: isFavorite
+                  ? '#e6f0eb'  // white if in favorites
+                  : '#153448', // blue otherwise
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '12px',
+                }}
+              >
+                ♡
+              </button></> : <></>}
 
            
 
