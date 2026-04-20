@@ -77,13 +77,17 @@ function Search() {
       setAmenities([...amenities, label]);
     }
   }
-
+  
   const handleNavigate = (cr) => {
     navigate('/', {
       state: {
         cr: cr
       }
     } );
+  }
+
+  const handleSeeReviews = (cr) => {
+    navigate(`/cr/${cr.id}`);
   }
 
   async function handleSearch() {
@@ -245,27 +249,63 @@ function Search() {
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                       {pageResults.map((cr) => (
-                        <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
+                        <div
+                          style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', transition: 'transform 0.15s, box-shadow 0.15s' }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.transform = 'translateX(4px)'
+                            e.currentTarget.style.boxShadow = '-4px 0 0 #E8A020, 0 4px 18px rgba(0,0,0,0.12)'
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.transform = 'translateX(0)'
+                            e.currentTarget.style.boxShadow = '2px 4px 14px rgba(0,0,0,0.18)'
+                          }}
+                        >
 
-                            {/* Card header */}
-                            <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
-                              <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                                {cr.building} — {cr.name}
-                              </span>
-                            </div>
-
-                            {/* Card body */}
-                            <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-                              <p><strong>Building:</strong> {cr.building}</p>
-                              <p><strong>Floor:</strong> {cr.floor}</p>
-                              <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
-                              <p><strong>Status:</strong> {cr.status}</p>
-                              <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
-                            </div>
-
+                          {/* Card header */}
+                          <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                            <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                              {cr.building} — {cr.name}
+                            </span>
                           </div>
-                        </Link>
+
+                          {/* Card body */}
+                          <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                            <p><strong>Building:</strong> {cr.building}</p>
+                            <p><strong>Floor:</strong> {cr.floor}</p>
+                            <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
+                            <p><strong>Status:</strong> {cr.status}</p>
+                            <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+                            <button
+                              onClick={() => handleSeeReviews(cr)}
+                              style={{
+                                padding: '10px',
+                                marginRight: '10px',
+                                background: '#153448',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '16px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                              }}
+                            >
+                              See Reviews
+                            </button>
+                            <button
+                              onClick={() => handleNavigate(cr)}
+                              style={{
+                                padding: '10px',
+                                background: '#153448',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '16px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                              }}
+                            >
+                              Navigate
+                          </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
 
