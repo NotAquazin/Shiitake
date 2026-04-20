@@ -64,71 +64,82 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow">
-            <div className="card-header bg-primary text-white">
-              <h3 className="text-center mb-0">Register Account</h3>
-            </div>
-            <div className="card-body">
-              {/* Alert for errors */}
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
-              
-              {/* Alert for success message */}
-              {message && (
-                <div className="alert alert-success" role="alert">
-                  {message}
-                </div>
-              )}
+    <div style={{ minHeight: '100vh', background: '#DFD0B8', padding: '60px 16px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '450px' }}>
+        <div style={{ background: '#153448', borderRadius: '12px', padding: '30px 24px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', color: 'white' }}>
+          
+          <h2 style={{ textAlign: 'center', margin: '0 0 24px', fontSize: '24px', fontFamily: 'Roboto, sans-serif' }}>
+            Register Account
+          </h2>
 
-              <form onSubmit={handleSubmit}>
-                <div className="form-group mb-3">
-                  <label htmlFor="username">Username</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group mb-3">
-                  <label htmlFor="email">Email address</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group mb-4">
-                  <label htmlFor="password">Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary w-100">
-                  Register
-                </button>
-              </form>
+          {/* Alert for errors */}
+          {error && (
+            <div style={{ background: '#f8d7da', color: '#721c24', padding: '10px 14px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #f5c6cb' }}>
+              {error}
             </div>
-          </div>
+          )}
+          
+          {/* Alert for success message */}
+          {message && (
+            <div style={{ background: '#d4edda', color: '#155724', padding: '10px 14px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #c3e6cb' }}>
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="username" style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', color: '#cbd5e1' }}>
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                style={{ width: '100%', padding: '10px 12px', fontSize: '14px', borderRadius: '6px', border: '1px solid #948979', background: 'white', color: '#153448', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="email" style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', color: '#cbd5e1' }}>
+                Email address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                style={{ width: '100%', padding: '10px 12px', fontSize: '14px', borderRadius: '6px', border: '1px solid #948979', background: 'white', color: '#153448', boxSizing: 'border-box' }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label htmlFor="password" style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', color: '#cbd5e1' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                style={{ width: '100%', padding: '10px 12px', fontSize: '14px', borderRadius: '6px', border: '1px solid #948979', background: 'white', color: '#153448', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              style={{ width: '100%', background: '#FFA239', color: '#153448', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', transition: 'background 0.2s' }}
+            >
+              Register
+            </button>
+          </form>
+
         </div>
       </div>
     </div>
