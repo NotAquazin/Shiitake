@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import L, { marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
@@ -15,10 +15,16 @@ import StarRating from "./StarRating";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
+const API_BASE = '';
+
+const defaultIcon = L.icon({
   iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 const userIcon = L.icon({
@@ -125,10 +131,10 @@ const Map = ({ targetCR }) => {
   useEffect(() => {
     async function fetchCRs() {
         try {
-            const crRes = await fetch('http://localhost:13000/CRs');
+            const crRes = await fetch(`${API_BASE}/CRs`);
             const crData = await crRes.json();
 
-            const revRes = await fetch('http://localhost:13000/reviews');
+            const revRes = await fetch(`${API_BASE}/reviews`);
             const allReviews = await revRes.json();
 
             const enhancedCRs = crData.map(cr => {
@@ -198,6 +204,17 @@ const Map = ({ targetCR }) => {
     return Object.values(groups);
   }, [crs]);
 
+  function MapRefresher() {
+  const map = useMap();
+  useEffect(() => {
+    // Small delay to ensure the mobile browser has finished layout
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+  }, [map]);
+  return null;
+}
+
   if (!position || !userPosition ) return <p>Loading map...</p>;
 
   return (
@@ -218,6 +235,7 @@ const Map = ({ targetCR }) => {
             <Marker 
               key={`${firstCr.latitude},${firstCr.longitude}`} 
               position={[firstCr.latitude, firstCr.longitude]}
+              icon={defaultIcon}
             >
               <Popup>
                 <CRPopupContent 
@@ -242,7 +260,6 @@ const Map = ({ targetCR }) => {
             },
           }}
     > </Marker>
-      // if navigating
       {navigating && (
         <>
         <Routing from={userPosition} to={destination ? [destination.latitude, destination.longitude] : null}/>

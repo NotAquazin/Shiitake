@@ -15,6 +15,8 @@ import L from "leaflet";
 import LeaderboardRow  from './components/LeaderboardRow'
 import FilterPanel     from './components/FilterPanel'
 
+const API_BASE = '';
+
 const SORT_OPTIONS = ['Highest Rated', 'Lowest Rated', 'Nearest', 'Most Reviews']
 
 // How many filters are currently active (for the badge count on the button)
@@ -44,8 +46,8 @@ export default function Leaderboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const crsRes = await axios.get('http://localhost:13000/crs');
-        const revsRes = await axios.get('http://localhost:13000/reviews');
+        const crsRes = await axios.get(`${API_BASE}/crs`);
+        const revsRes = await axios.get(`${API_BASE}/reviews`);
         
         const crsData = crsRes.data;
         const revsData = revsRes.data;
