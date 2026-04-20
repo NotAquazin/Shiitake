@@ -25,15 +25,20 @@ const Profile = () => {
     const [crs, setCRs] = useState([]);
     const [favCRs, setFavCRs] = useState([]);
     const navigate = useNavigate();
+    const currentUsername = localStorage.getItem('shiitake_username') || '';
+    const currentUserID = localStorage.getItem('shiitake_userID')
+
     const [userVotes,     setUserVotes]     = useState(() => {
-    const username = localStorage.getItem('shiitake_username') || '';
-    if (!username || !localStorage.getItem('shiitake_token')) return {};
+
+    if (!currentUsername || !localStorage.getItem('shiitake_token')) return {};
     try {
-      return JSON.parse(localStorage.getItem(`shiitake_votes_${username}`) || '{}');
+      return JSON.parse(localStorage.getItem(`shiitake_votes_${currentUsername}`) || '{}');
     } catch {
       return {};
     }
+
   })
+
     const isLoggedIn = !!localStorage.getItem('shiitake_token');
 
     const BadgeCircle = ({ badgeString }) => {
@@ -107,15 +112,20 @@ const Profile = () => {
             try {
 
                 // Use pk in the fetch URL
-                const userRes = await fetch(`${API_BASE}/users/${pk}`);
+                const [userRes, revRes, crRes] = await Promise.all([
+                    fetch(`${API_BASE}/users/${pk}`),
+                    fetch(`${API_BASE}/reviews?UserId=${pk}`), // Filtered fetch
+                    fetch(`${API_BASE}/CRs`)
+                ]);
                 const userData = await userRes.json();
                 setUser(userData);
 
-                const revRes = await fetch(`${API_BASE}/reviews`);
-                const allReviews = await revRes.json();
-                
-                // Filter reviews using the primary key
-                const myReviews = allReviews.filter(r => r.UserId === parseInt(pk)).map(mapReviewFromApi);
+                const revData = await revRes.json();
+
+                const revArray = Array.isArray(revData) ? revData : [];
+                const myReviews = revArray
+                .filter((r) => String(r.UserId) === String(pk)) 
+                .map(mapReviewFromApi);
                 const myMonthReviews = myReviews.filter((r) => {
                     const reviewDate = new Date(r.createdAt); 
                     return (
@@ -126,7 +136,15 @@ const Profile = () => {
 
                 setReviews(myReviews);
                 setMonthReviews(myMonthReviews);
+                
                 handleUpdateBadges(myMonthReviews);
+                
+                const crData = await crRes.json();
+                setCRs(crData);
+                
+                if (user) {
+                    setFavCRs(crs.filter(cr => user.favoriteCRs.includes(cr.id)));
+                }
 
                 setLoading(false);
             } catch (err) {
@@ -135,35 +153,14 @@ const Profile = () => {
             }
         }
         loadProfile();
-
-        async function loadCR() {
-            try {
-                // Use pk in the fetch URL
-                const crRes = await fetch(`${API_BASE}/CRs`);
-                const crData = await crRes.json();
-                setCRs(crData);
-    
-            } catch (err) {
-                console.error("Fetch error:", err);
-            }
-        }
-        loadCR();
-        if (user) {
-            console.log(user.favoriteCRs)
-            console.log(crs)
-            setFavCRs(crs.filter(cr => user.favoriteCRs.includes(cr.id)));
-        }
-        
     }, [pk, user]); 
 
     // HANDLERS 
     const handleEditProfile = () => {
-        setEditingProfile(true);
-        setDesc(user.description || "");
-    };
-    
-    const handleEdit = (review) => {
-        console.log("Edit requested for review:", review.id);
+        if (pk == currentUserID) {
+            setEditingProfile(true);
+            setDesc(user.description || "");
+        }
     };
 
     const handleReport = (reviewId) => {
@@ -172,9 +169,22 @@ const Profile = () => {
     };
 
     const handleDelete = async (reviewId) => {
-        if (window.confirm('Are you sure you want to delete this review?')) {
-            setReviews(reviews.filter(r => r.id !== reviewId));
+        if (window.confirm('Delete your review?')) {
+        try {
+          const token = localStorage.getItem('shiitake_token')
+          const response = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+            method: 'DELETE',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          })
+
+          if (!response.ok) throw new Error('Failed to delete review')
+
+          setReviews((prev) => prev.filter((r) => getReviewId(r) !== reviewId))
+        } catch (error) {
+          console.error(error)
+          alert('Could not delete review. Please try again.')
         }
+      }
     };
 
     async function applyVote(reviewId, nextVote) {
@@ -217,9 +227,8 @@ const Profile = () => {
             delete updated[reviewId]
           }
 
-          const username = localStorage.getItem('shiitake_username') || ''
-          if (username) {
-            localStorage.setItem(`shiitake_votes_${username}`, JSON.stringify(updated))
+          if (currentUsername) {
+            localStorage.setItem(`shiitake_votes_${currentUsername}`, JSON.stringify(updated))
           }
 
           return updated
@@ -370,9 +379,11 @@ const Profile = () => {
                     ) : (
                         <>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{user.description}</p>
+                        {pk == currentUserID ? 
                         <button onClick={() => handleEditProfile(pk)} style={pillBtn('#e3f2fd', '#1565c0')}>
-                            Edit Profile
+                            Edit Profile 
                         </button>
+                        : <></>}
                         </>
                     )}
                 </div>
@@ -481,7 +492,7 @@ const Profile = () => {
                                     <ReviewCard
                                         key={review.id}
                                         review={review}
-                                        currentUser={user.username}
+                                        currentUser={currentUsername}
                                         currentVote={userVotes[getReviewId(review)] || null}
                                         isLoggedIn={isLoggedIn}
                                         onEdit={() => handleReviewToCR(review)}
@@ -502,7 +513,7 @@ const Profile = () => {
 function pillBtn(background, color) {
   return {
     padding: '3px 10px',
-    fontSize: '11px',
+    fontSize: '16px',
     fontWeight: '500',
     border: 'none',
     borderRadius: '20px',

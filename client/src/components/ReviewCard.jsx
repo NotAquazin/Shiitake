@@ -1,4 +1,5 @@
 import StarRating from './StarRating'
+import { Link } from 'react-router-dom';
 
 function ReviewCard({ review, currentUser, currentVote, isLoggedIn, isAdmin, onLike, onDislike, onEdit, onDelete, onReport }) {
 
@@ -15,9 +16,11 @@ function ReviewCard({ review, currentUser, currentVote, isLoggedIn, isAdmin, onL
       {/* author name, date, and stars */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
         <div>
+          <Link to={`/profile/${review.UserId}`}>
           <span style={{ fontWeight: '600', fontSize: '14px', color: '#153448' }}>
             {review.author}
           </span>
+          </Link>
           <span style={{ fontSize: '11px', color: '#999', marginLeft: '8px' }}>
             {review.timestamp}
           </span>

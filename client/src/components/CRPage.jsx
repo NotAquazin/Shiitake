@@ -69,13 +69,15 @@ const CRPage = () => {
             const crData = await crRes.json();
             setCR(crData);
 
-            const revRes = await fetch(`${API_BASE}/reviews`);
-            const allReviews = await revRes.json();
+            const revRes = await fetch(`${API_BASE}/reviews?CRId=${pk}`);
+            const revData = await revRes.json();
 
-            // Filter reviews using the primary key
-            const pkNumber = Number(pk);
-            const myReviews = allReviews.filter((r) => r.CRId === pkNumber || String(r.CRId) === String(pk)).map(mapReviewFromApi);
-            setReviews(myReviews);
+            const revArray = Array.isArray(revData) ? revData : [];
+            const reviews = revArray
+              .filter((r) => String(r.CRId) === String(pk)) 
+              .map(mapReviewFromApi);
+
+            setReviews(reviews);
 
             if (currentUserId) {
               const userRes = await fetch(`${API_BASE}/users/${currentUserId}`);
