@@ -86,10 +86,6 @@ function Search() {
     } );
   }
 
-  const handleSeeReviews = (cr) => {
-    navigate(`/cr/${cr.id}`);
-  }
-
   async function handleSearch() {
     try {
       const response = await fetch(`${API_URL}/crs`);
@@ -250,7 +246,7 @@ function Search() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                       {pageResults.map((cr) => (
                         <div
-                          style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', transition: 'transform 0.15s, box-shadow 0.15s' }}
+                          style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', transition: 'transform 0.15s, box-shadow 0.15s', }}
                           onMouseEnter={e => {
                             e.currentTarget.style.transform = 'translateX(4px)'
                             e.currentTarget.style.boxShadow = '-4px 0 0 #E8A020, 0 4px 18px rgba(0,0,0,0.12)'
@@ -262,34 +258,23 @@ function Search() {
                         >
 
                           {/* Card header */}
-                          <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                          <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center', textAlign: 'center', minHeight: '80px', alignItems:'center', justifyContent: 'center', display: 'flex' }}>
                             <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
                               {cr.building} — {cr.name}
                             </span>
                           </div>
+                          </Link>
 
                           {/* Card body */}
                           <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                             <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                             <p><strong>Building:</strong> {cr.building}</p>
                             <p><strong>Floor:</strong> {cr.floor}</p>
                             <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
                             <p><strong>Status:</strong> {cr.status}</p>
                             <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
-                            <button
-                              onClick={() => handleSeeReviews(cr)}
-                              style={{
-                                padding: '10px',
-                                marginRight: '10px',
-                                background: '#153448',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '16px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                              }}
-                            >
-                              See Reviews
-                            </button>
+                            </Link>
                             <button
                               onClick={() => handleNavigate(cr)}
                               style={{
