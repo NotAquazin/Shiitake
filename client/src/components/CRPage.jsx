@@ -407,19 +407,20 @@ const CRPage = () => {
               {isLoggedIn ? <><button
                 onClick={handleToggleFavorite}
                 style={{
-                  padding: '8px 16px',
+                  padding: '3px 8px',
                   marginLeft: '16px',
                   background: isFavorite
-                  ? '#4CAF50'  // blue if in favorites
+                  ? '#d83110'  // blue if in favorites
                   : '#e6f0eb', // white otherwise
                   color: isFavorite
                   ? '#e6f0eb'  // white if in favorites
                   : '#153448', // blue otherwise
                   border: 'none',
                   borderRadius: '8px',
+                  align: 'center',  
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '12px',
+                  fontWeight: '1000',
+                  fontSize: '16px',
                 }}
               >
                 ♡

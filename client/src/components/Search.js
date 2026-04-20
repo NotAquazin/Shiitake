@@ -29,6 +29,8 @@ function Search() {
 
   // Search results
   const [results, setResults] = useState(null);
+  const [page, setPage] = useState(1);
+  const CRS_PER_PAGE = 16;
 
   // On mount: fetch all CRs and global tags to populate filter options and show default results
   useEffect(() => {
@@ -84,10 +86,6 @@ function Search() {
     } );
   }
 
-  const handleSeeReviews = (cr) => {
-    navigate(`/cr/${cr.id}`);
-  }
-
   async function handleSearch() {
     try {
       const response = await fetch(`${API_URL}/crs`);
@@ -126,6 +124,7 @@ function Search() {
       }
       
     setResults(filtered);
+    setPage(1);
     } catch (err) {
       console.error('Failed to fetch CRs:', err);
       setResults([]);
@@ -239,10 +238,6 @@ function Search() {
         {results && (
           results.length === 0
             ? <p style={{ textAlign: 'center', color: '#777' }}>No CR matches found</p>
-            : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {results.map((cr) => (
-                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)'}}>
             : (() => {
                 const totalPages = Math.ceil(results.length / CRS_PER_PAGE);
                 const pageResults = results.slice((page - 1) * CRS_PER_PAGE, page * CRS_PER_PAGE);
@@ -251,24 +246,8 @@ function Search() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                       {pageResults.map((cr) => (
                         <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div
-                            style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.transform = 'translateX(4px)'
-                              e.currentTarget.style.boxShadow = '-4px 0 0 #E8A020, 0 4px 18px rgba(0,0,0,0.12)'
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.transform = 'translateX(0)'
-                              e.currentTarget.style.boxShadow = '2px 4px 14px rgba(0,0,0,0.18)'
-                            }}
-                          >
+                          <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
 
-                      {/* Card header */}
-                      <div style={{ background: '#153448', padding: '8px 16px', textAlign: 'center', minHeight: '80px', alignItems:'center', justifyContent: 'center', display: 'flex' }}>
-                        <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                          {cr.building} — {cr.name}
-                        </span>
-                      </div>
                             {/* Card header */}
                             <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
                               <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
@@ -276,43 +255,6 @@ function Search() {
                               </span>
                             </div>
 
-                      {/* Card body */}
-                      <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-                        <p><strong>Building:</strong> {cr.building}</p>
-                        <p><strong>Floor:</strong> {cr.floor}</p>
-                        <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
-                        <p><strong>Status:</strong> {cr.status}</p>
-                        <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
-                        <button
-                          onClick={() => handleSeeReviews(cr)}
-                          style={{
-                            padding: '10px',
-                            marginRight: '5px',
-                            background: '#153448',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '16px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                          }}
-                        >
-                          See Reviews
-                      </button>
-                        <button
-                          onClick={() => handleNavigate(cr)}
-                          style={{
-                            padding: '10px',
-                            background: '#153448',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '16px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                          }}
-                        >
-                          Navigate
-                      </button>
-                      </div>
                             {/* Card body */}
                             <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
                               <p><strong>Building:</strong> {cr.building}</p>
@@ -322,10 +264,6 @@ function Search() {
                               <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
                             </div>
 
-                    </div>
-                ))}
-              </div>
-            )
                           </div>
                         </Link>
                       ))}

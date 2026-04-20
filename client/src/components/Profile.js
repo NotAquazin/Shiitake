@@ -480,7 +480,14 @@ const Profile = () => {
                                 <div key={review.id} className="review-wrapper" style={{ marginBottom: '20px' }}>
                                     <button 
                                         onClick={() => handleReviewToCR(review)} 
-                                        style={pillBtn('#e3f2fd', '#1565c0')}
+                                        style={{ padding: '3px 10px',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                background: '#153448',
+                                                color: '#e3f2fd',
+                                                cursor: 'pointer'}}
                                     >
                                     {(() => {
                                         const foundCR = crs.find(c => String(c.id) === String(review.CRId));
