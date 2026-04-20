@@ -29,6 +29,8 @@ function Search() {
 
   // Search results
   const [results, setResults] = useState(null);
+  const [page, setPage] = useState(1);
+  const CRS_PER_PAGE = 16;
 
   // On mount: fetch all CRs and global tags to populate filter options and show default results
   useEffect(() => {
@@ -122,6 +124,7 @@ function Search() {
       }
       
     setResults(filtered);
+    setPage(1);
     } catch (err) {
       console.error('Failed to fetch CRs:', err);
       setResults([]);
@@ -235,34 +238,62 @@ function Search() {
         {results && (
           results.length === 0
             ? <p style={{ textAlign: 'center', color: '#777' }}>No CR matches found</p>
-            : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {results.map((cr) => (
-                  <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
+            : (() => {
+                const totalPages = Math.ceil(results.length / CRS_PER_PAGE);
+                const pageResults = results.slice((page - 1) * CRS_PER_PAGE, page * CRS_PER_PAGE);
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      {pageResults.map((cr) => (
+                        <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
 
-                      {/* Card header */}
-                      <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
-                        <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
-                          {cr.building} — {cr.name}
-                        </span>
-                      </div>
+                            {/* Card header */}
+                            <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
+                              <span style={{ color: 'white', fontSize: '15px', fontStyle: 'italic' }}>
+                                {cr.building} — {cr.name}
+                              </span>
+                            </div>
 
-                      {/* Card body */}
-                      <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
-                        <p><strong>Building:</strong> {cr.building}</p>
-                        <p><strong>Floor:</strong> {cr.floor}</p>
-                        <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
-                        <p><strong>Status:</strong> {cr.status}</p>
-                        <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
-                        
-                      </div>
+                            {/* Card body */}
+                            <div style={{ background: 'white', padding: '14px 16px', fontSize: '13px' }}>
+                              <p><strong>Building:</strong> {cr.building}</p>
+                              <p><strong>Floor:</strong> {cr.floor}</p>
+                              <p><strong>Tags:</strong> {Array.isArray(cr.tags) && cr.tags.length > 0 ? cr.tags.join(' • ') : '—'}</p>
+                              <p><strong>Status:</strong> {cr.status}</p>
+                              <p><strong>Rating:</strong> {cr.averageRating > 0 ? `${Number(cr.averageRating).toFixed(1)} / 5.0` : 'No ratings yet'}</p>
+                            </div>
 
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  </Link>
-                ))}
-              </div>
-            )
+
+                    {totalPages > 1 && (
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '24px' }}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                          <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            style={{
+                              padding: '4px 12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              background: p === page ? '#153448' : '#d9cdb8',
+                              color:      p === page ? 'white'   : '#3a3020',
+                            }}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()
         )}
 
       </div>
