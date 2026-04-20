@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
 import { useNavigate } from 'react-router-dom';
-import Routing from './Routing';
+import Routing from './Routing.js';
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
