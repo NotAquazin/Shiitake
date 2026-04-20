@@ -18,7 +18,6 @@ const mockCR = {
   averageRating: 3.0,
 };
 
-// One existing review so the header star count is predictable (rating: 3 → "3/5")
 const mockReviews = [
   {
     id: 10,
@@ -34,9 +33,36 @@ const mockReviews = [
   },
 ];
 
+// ─── URL-aware fetch mock ─────────────────────────────────────────────────────
+// Sets up fetch to route by URL+method so the /global-tags call from ReviewForm
+// never consumes a mock intended for the POST or PATCH calls.
+
+function setupMocks({ cr = mockCR, reviews = mockReviews, postResponse, patchResponse } = {}) {
+  fetch.mockImplementation((url, opts) => {
+    const method = (opts?.method || 'GET').toUpperCase();
+
+    if (url.includes('/global-tags')) {
+      return Promise.resolve({ ok: true, json: async () => [] });
+    }
+    if (url.includes('/reviews')) {
+      if (method === 'GET')  return Promise.resolve({ ok: true, json: async () => reviews });
+      if (method === 'POST') return Promise.resolve(
+        postResponse ?? { ok: true, json: async () => ({ review: {} }) }
+      );
+    }
+    // CRPage uses /CRs/:pk (uppercase) for GET and /crs/:id (lowercase) for PATCH
+    if (url.includes('/CRs/') || url.includes('/crs/')) {
+      if (method === 'GET')   return Promise.resolve({ ok: true, json: async () => cr });
+      if (method === 'PATCH') return Promise.resolve(
+        patchResponse ?? { ok: true, json: async () => ({ cr }) }
+      );
+    }
+    return Promise.resolve({ ok: true, json: async () => ({}) });
+  });
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Render CRPage mounted at /cr/1
 function renderCRPage() {
   render(
     <MemoryRouter initialEntries={['/cr/1']}>
@@ -47,47 +73,39 @@ function renderCRPage() {
   );
 }
 
-// Load CRPage and wait until the CR header is visible
-async function loadCRPage(cr = mockCR, reviews = mockReviews) {
-  fetch
-    .mockResolvedValueOnce({ ok: true, json: async () => cr })
-    .mockResolvedValueOnce({ ok: true, json: async () => reviews });
-
+async function loadCRPage(opts = {}) {
+  setupMocks(opts);
   await act(async () => renderCRPage());
   await waitFor(() => expect(screen.getByText(/MVP/)).toBeInTheDocument());
 }
 
-// Click "Leave a Review" and wait for the ReviewForm to appear
 async function openReviewForm() {
   await act(async () => userEvent.click(screen.getByText(/\+ Leave a Review/i)));
   await waitFor(() => screen.getByText(/Write a Review/i));
 }
 
-// Click a star inside the ReviewForm's Rating section.
-// Uses within() to scope to just the form's stars, so ReviewCard
-// and header stars don't interfere.
 function clickFormStar(starNumber) {
   const ratingLabel = screen.getByText('Rating');
   const ratingSection = ratingLabel.closest('div');
   const stars = within(ratingSection).getAllByText('★');
-  userEvent.click(stars[starNumber - 1]); // starNumber 1–5 → index 0–4
+  userEvent.click(stars[starNumber - 1]);
 }
 
 // ─── Global setup ─────────────────────────────────────────────────────────────
 beforeEach(() => {
-  fetch.mockClear();
+  fetch.mockReset();
+  // Default: all fetches return empty so ReviewForm's /global-tags call never throws
+  fetch.mockImplementation(() => Promise.resolve({ ok: true, json: async () => [] }));
+
   jest.spyOn(window, 'alert').mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem('shiitake_username', 'TestUser');
   localStorage.setItem('shiitake_userID', '42');
-
   localStorage.setItem('shiitake_token', 'mock-auth-token');
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. RATING VALIDATION
-// Only ratings 1–5 are valid. 0 (nothing selected) must show an error.
-// A rating of 6 is structurally impossible: the UI exposes exactly 5 stars.
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('1. Rating validation', () => {
 
@@ -132,7 +150,7 @@ describe('1. Rating validation', () => {
       />
     );
 
-    userEvent.click(screen.getAllByText('★')[0]); // star 1
+    userEvent.click(screen.getAllByText('★')[0]);
     userEvent.click(screen.getByText(/Post Review/i));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ rating: 1 }));
@@ -150,7 +168,7 @@ describe('1. Rating validation', () => {
       />
     );
 
-    userEvent.click(screen.getAllByText('★')[4]); // star 5
+    userEvent.click(screen.getAllByText('★')[4]);
     userEvent.click(screen.getByText(/Post Review/i));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ rating: 5 }));
@@ -160,20 +178,15 @@ describe('1. Rating validation', () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 2. REQUIRED FIELDS: UserId and CRId
-// The frontend sends whatever is in localStorage / the URL.
-// When the server rejects the request the component must show an error alert.
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('2. Review cannot be created without a UserId or CRId', () => {
 
   it('shows an error alert when the server rejects a review with no UserId', async () => {
-    localStorage.removeItem('shiitake_userID'); // simulate not logged in
+    localStorage.removeItem('shiitake_userID');
 
-    fetch
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'UserId cannot be null' }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: false, status: 400, json: async () => ({ error: 'UserId cannot be null' }) },
+    });
     await openReviewForm();
     clickFormStar(4);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -184,13 +197,9 @@ describe('2. Review cannot be created without a UserId or CRId', () => {
   });
 
   it('sends a CRId derived from the URL and alerts when the server rejects it', async () => {
-    // Simulate the server treating the request as invalid (e.g. FK constraint)
-    fetch
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'CRId cannot be null' }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: false, status: 400, json: async () => ({ error: 'CRId cannot be null' }) },
+    });
     await openReviewForm();
     clickFormStar(3);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -204,20 +213,15 @@ describe('2. Review cannot be created without a UserId or CRId', () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. NON-EXISTENT UserId OR CRId
-// If the database has no matching row for the FK the server returns an error.
-// The component must handle it gracefully with an alert.
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('3. Review cannot be created for a UserId or CRId that does not exist', () => {
 
   it('shows an error alert when the server reports the UserId does not exist', async () => {
-    localStorage.setItem('shiitake_userID', '9999'); // user ID that doesn't exist in DB
+    localStorage.setItem('shiitake_userID', '9999');
 
-    fetch
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'User not found' }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: false, status: 404, json: async () => ({ error: 'User not found' }) },
+    });
     await openReviewForm();
     clickFormStar(3);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -228,12 +232,9 @@ describe('3. Review cannot be created for a UserId or CRId that does not exist',
   });
 
   it('shows an error alert when the server reports the CRId does not exist', async () => {
-    fetch
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true,  json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'CR not found' }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: false, status: 404, json: async () => ({ error: 'CR not found' }) },
+    });
     await openReviewForm();
     clickFormStar(2);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -247,8 +248,6 @@ describe('3. Review cannot be created for a UserId or CRId that does not exist',
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 4. UserId MATCHES THE REQUESTER
-// CRPage reads the logged-in user's ID from localStorage and sends it in the
-// POST body. The submitted UserId must equal what is in localStorage.
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('4. UserId on the submitted review matches the logged-in user', () => {
 
@@ -261,13 +260,9 @@ describe('4. UserId on the submitted review matches the logged-in user', () => {
       likes: 0, dislikes: 0, createdAt: new Date().toISOString(),
     };
 
-    fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true, json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ review: newReview }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ cr: mockCR }) }); // PATCH /crs
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: true, json: async () => ({ review: newReview }) },
+    });
     await openReviewForm();
     clickFormStar(4);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -289,13 +284,9 @@ describe('4. UserId on the submitted review matches the logged-in user', () => {
       likes: 0, dislikes: 0, createdAt: new Date().toISOString(),
     };
 
-    fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true, json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ review: newReview }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ cr: mockCR }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      postResponse: { ok: true, json: async () => ({ review: newReview }) },
+    });
     await openReviewForm();
     clickFormStar(2);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
@@ -312,67 +303,118 @@ describe('4. UserId on the submitted review matches the logged-in user', () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 5. averageRating UPDATES AFTER A NEW 5-STAR REVIEW
-// CRPage computes the average client-side from the reviews array. After adding
-// a new review, the displayed "X/5" beside the header stars must update.
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('5. averageRating updates after a new 5-star review is added', () => {
 
-  // Helper: returns the X/5 span that lives inside the "Average Rating" header
-  // section, ignoring the identical spans inside ReviewCards.
   function getHeaderRatingText() {
     const avgSection = screen.getByText(/Average Rating/).parentElement;
     return within(avgSection).getByText(/\/5/);
   }
 
   it('recalculates average from 3/5 to 4/5 after adding a 5-star review', async () => {
-    // Existing review: rating 3 → avg = 3 → header shows "3/5"
-    // New review:      rating 5 → avg = (3+5)/2 = 4 → header should show "4/5"
     const newReview = {
       id: 50, CRId: 1, UserId: 42, author: 'TestUser',
       rating: 5, comment: '', reviewTags: [],
       likes: 0, dislikes: 0, createdAt: new Date().toISOString(),
     };
 
-    fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true, json: async () => mockReviews })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ review: newReview }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ cr: mockCR }) });
+    await loadCRPage({
+      postResponse: { ok: true, json: async () => ({ review: newReview }) },
+    });
 
-    await loadCRPage();
-
-    // Before submit: header average of [3] → "3/5"
     expect(getHeaderRatingText()).toHaveTextContent('3/5');
 
     await openReviewForm();
     clickFormStar(5);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
 
-    // After submit: header average of [3, 5] = 4 → "4/5"
     await waitFor(() => expect(getHeaderRatingText()).toHaveTextContent('4/5'));
   });
 
   it('shows 5/5 in the header when all reviews including the new one are 5 stars', async () => {
     const allFiveReviews = [{ ...mockReviews[0], rating: 5 }];
-
     const newReview = {
       id: 51, CRId: 1, UserId: 42, author: 'TestUser',
       rating: 5, comment: '', reviewTags: [],
       likes: 0, dislikes: 0, createdAt: new Date().toISOString(),
     };
 
-    fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockCR })
-      .mockResolvedValueOnce({ ok: true, json: async () => allFiveReviews })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ review: newReview }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ cr: mockCR }) });
-
-    await loadCRPage();
+    await loadCRPage({
+      reviews: allFiveReviews,
+      postResponse: { ok: true, json: async () => ({ review: newReview }) },
+    });
     await openReviewForm();
     clickFormStar(5);
     await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
 
     await waitFor(() => expect(getHeaderRatingText()).toHaveTextContent('5/5'));
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. 24-HOUR RATE LIMIT
+// The server returns HTTP 429 with a `nextAllowed` timestamp when a user tries
+// to post a second review for the same CR within 24 hours.
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('6. 24-hour rate limit', () => {
+
+  it('shows the "You already reviewed" alert when the server returns 429 with nextAllowed', async () => {
+    const nextAllowed = new Date('2024-06-15T10:00:00Z').toISOString();
+
+    await loadCRPage({
+      postResponse: {
+        ok: false,
+        status: 429,
+        json: async () => ({ error: 'Rate limited', nextAllowed }),
+      },
+    });
+    await openReviewForm();
+    clickFormStar(3);
+    await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
+
+    await waitFor(() =>
+      expect(window.alert).toHaveBeenCalledWith(
+        expect.stringContaining('You already reviewed this CR recently')
+      )
+    );
+  });
+
+  it('shows the generic error alert when the server returns 429 but no nextAllowed', async () => {
+    await loadCRPage({
+      postResponse: {
+        ok: false,
+        status: 429,
+        json: async () => ({ error: 'Rate limited' }), // no nextAllowed
+      },
+    });
+    await openReviewForm();
+    clickFormStar(3);
+    await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
+
+    await waitFor(() =>
+      expect(window.alert).toHaveBeenCalledWith('Could not save review. Please try again.')
+    );
+  });
+
+  it('does not close the review form after a 429 rate-limit response', async () => {
+    const nextAllowed = new Date('2024-06-15T10:00:00Z').toISOString();
+
+    await loadCRPage({
+      postResponse: {
+        ok: false,
+        status: 429,
+        json: async () => ({ error: 'Rate limited', nextAllowed }),
+      },
+    });
+    await openReviewForm();
+    clickFormStar(3);
+    await act(async () => userEvent.click(screen.getByText(/Post Review/i)));
+
+    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+
+    // Form should still be visible — user can edit and retry later
+    expect(screen.getByText(/Write a Review/i)).toBeInTheDocument();
   });
 
 });

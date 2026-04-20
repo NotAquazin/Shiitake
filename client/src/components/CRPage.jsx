@@ -97,10 +97,24 @@ const CRPage = () => {
   const isLoggedIn = !!localStorage.getItem('shiitake_token');
   const CURRENT_USER = localStorage.getItem('shiitake_username') || currentUsername
 
-  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']     
+  const SORT_OPTIONS = ['Newest', 'Oldest', 'Highest Rated', 'Lowest Rated', 'Most Liked']
 
-    // Checks if already posted review
-    const alreadyReviewed = reviews.some((r) => r.author === CURRENT_USER)
+    const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000
+
+    // Check if user reviewed within the current time window (by UserId when available, else by author name)
+    const userReviews = currentUserId
+      ? reviews.filter(r => String(r.UserId) === String(currentUserId))
+      : reviews.filter(r => r.author === CURRENT_USER)
+
+    const latestUserReview = userReviews.length > 0
+      ? userReviews.reduce((latest, r) =>
+          new Date(r.createdAt) > new Date(latest.createdAt) ? r : latest
+        )
+      : null
+
+    const alreadyReviewed = latestUserReview
+      ? (Date.now() - new Date(latestUserReview.createdAt).getTime()) < REVIEW_WINDOW_MS
+      : false
 
     // Average rating across all reviews
     const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
@@ -154,7 +168,16 @@ const CRPage = () => {
             }),
           })
 
-          if (!response.ok) throw new Error('Failed to create review')
+          if (!response.ok) {
+            const data = await response.json()
+            if (response.status === 429 && data.nextAllowed) {
+              const nextTime = new Date(data.nextAllowed).toLocaleString()
+              alert(`You already reviewed this CR recently. You can review it again after ${nextTime}.`)
+            } else {
+              throw new Error('Failed to create review')
+            }
+            return
+          }
 
           const data = await response.json()
           const created = mapReviewFromApi(data.review)

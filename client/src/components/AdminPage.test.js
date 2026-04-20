@@ -62,12 +62,12 @@ function setupFetch({ crs = CRS_15, reviews = [], tags = TAGS } = {}) {
   fetch.mockImplementation((url, opts) => {
     const method = opts?.method || 'GET'
 
-    // DELETE /tags/:name  — must be checked before the generic /tags GET
-    if (/\/tags\/.+/.test(url) && method === 'DELETE') {
+    // DELETE /global-tags/:name  — must be checked before the generic /global-tags GET
+    if (/\/global-tags\/.+/.test(url) && method === 'DELETE') {
       return Promise.resolve({ ok: true, json: async () => ({ message: 'Removed.' }) })
     }
-    // POST /tags — add new tag
-    if (url.endsWith('/tags') && method === 'POST') {
+    // POST /global-tags — add new tag
+    if (url.endsWith('/global-tags') && method === 'POST') {
       const name = opts?.body ? JSON.parse(opts.body).name : ''
       return Promise.resolve({ ok: true, json: async () => ({ tag: { name } }) })
     }
@@ -85,9 +85,9 @@ function setupFetch({ crs = CRS_15, reviews = [], tags = TAGS } = {}) {
     }
 
     // GET endpoints
-    if (url.endsWith('/crs'))     { return Promise.resolve({ ok: true, json: async () => crs }) }
-    if (url.endsWith('/reviews')) { return Promise.resolve({ ok: true, json: async () => reviews }) }
-    if (url.endsWith('/tags'))    { return Promise.resolve({ ok: true, json: async () => tags }) }
+    if (url.endsWith('/crs'))          { return Promise.resolve({ ok: true, json: async () => crs }) }
+    if (url.endsWith('/reviews'))      { return Promise.resolve({ ok: true, json: async () => reviews }) }
+    if (url.endsWith('/global-tags'))  { return Promise.resolve({ ok: true, json: async () => tags }) }
 
     return Promise.resolve({ ok: true, json: async () => [] })
   })
@@ -250,7 +250,7 @@ describe('CR Management — tag management', () => {
     await waitFor(() => {
       // API call was made with correct payload and auth header
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:13000/tags',
+        '/global-tags',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ name: 'NewTag' }),
@@ -306,7 +306,7 @@ describe('CR Management — tag management', () => {
     await waitFor(() => {
       // API call was made with correct URL and auth header
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:13000/tags/Bidet',
+        '/global-tags/Bidet',
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.objectContaining({ Authorization: 'Bearer fake-admin-token' }),
@@ -414,7 +414,7 @@ describe('Reported Reviews', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:13000/reviews/99/clear-report',
+        '/reviews/99/clear-report',
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({ Authorization: 'Bearer fake-admin-token' }),
@@ -438,7 +438,7 @@ describe('Reported Reviews', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:13000/reviews/99',
+        '/reviews/99',
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.objectContaining({ Authorization: 'Bearer fake-admin-token' }),

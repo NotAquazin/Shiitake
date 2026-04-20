@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 // Using Sequelize to add models
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 
 // Enable Supabase
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -22,6 +22,7 @@ const port = process.env.PORT || 3000
 const User = require('./models/userModel')(sequelize);
 const CR = require('./models/crModel')(sequelize);
 const Review = require('./models/reviewModel')(sequelize);
+const GlobalTag = require('./models/globalTagModel')(sequelize);
 
 User.hasMany(Review);
 Review.belongsTo(User);
@@ -243,8 +244,27 @@ async function recalcAverageRating(CRId) {
 
 app.post('/reviews', async (req, res) => {
     try {
+        const { CRId, UserId } = req.body;
+
+        // Rate limit: one review per user per CR per 24 hours
+        const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000
+        if (UserId && CRId) {
+            const since = new Date(Date.now() - REVIEW_WINDOW_MS);
+            const recent = await Review.findOne({
+                where: { UserId, CRId, createdAt: { [Op.gte]: since } },
+                order: [['createdAt', 'DESC']],
+            });
+            if (recent) {
+                const nextAllowed = new Date(new Date(recent.createdAt).getTime() + REVIEW_WINDOW_MS);
+                return res.status(429).json({
+                    error: 'You can only review this CR once every 24 hours.',
+                    nextAllowed: nextAllowed.toISOString(),
+                });
+            }
+        }
+
         const newReview = await Review.create(req.body);
-        if (req.body.CRId) await recalcAverageRating(req.body.CRId);
+        if (CRId) await recalcAverageRating(CRId);
         res.status(201).json({ message: 'Review created successfully!', review: newReview });
     } catch (err) {
         console.error(err);
@@ -403,6 +423,56 @@ app.get('/setup', async (req,res) => {
         res.sendStatus(500)
     }
 }) */
+
+// ==========================================
+// GLOBAL TAGS ROUTES
+// ==========================================
+
+// GET all global tags (sorted, returns array of name strings)
+app.get('/global-tags', async (req, res) => {
+    try {
+        const tags = await GlobalTag.findAll({ order: [['name', 'ASC']] });
+        res.json(tags.map(t => t.name));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST a new global tag (admin only)
+app.post('/global-tags', requireAdmin, async (req, res) => {
+    try {
+        const name = (req.body.name || '').trim();
+        if (!name) return res.status(400).json({ error: 'Tag name is required.' });
+        const tag = await GlobalTag.create({ name });
+        return res.status(201).json({ message: 'Tag created.', name: tag.name });
+    } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({ error: 'Tag already exists.' });
+        }
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE a global tag by name (admin only)
+// Also removes the tag from every CR that has it in its tags array
+app.delete('/global-tags/:name', requireAdmin, async (req, res) => {
+    try {
+        const tagName = req.params.name;
+        const tag = await GlobalTag.findOne({ where: { name: tagName } });
+        if (!tag) return res.status(404).json({ error: 'Tag not found.' });
+        await tag.destroy();
+
+        // Strip the tag from every CR that contains it
+        const affectedCRs = await CR.findAll({ where: { tags: { [Op.contains]: [tagName] } } });
+        for (const cr of affectedCRs) {
+            await cr.update({ tags: cr.tags.filter(t => t !== tagName) });
+        }
+
+        return res.status(200).json({ message: 'Tag deleted.', affectedCRs: affectedCRs.length });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server has started on port: ${PORT}`))

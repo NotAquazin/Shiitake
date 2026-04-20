@@ -1,11 +1,14 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';import Login from './components/Login';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import Login from './components/Login';
 import Register from './components/Register';
 import InteractiveMap from "./components/Map";
 import CRPage from "./components/CRPage";
 import Profile from "./components/Profile";
 import Search from "./components/Search";
-import AdminPage from "./components/AdminPage";
+import Leaderboard from "./components/Leaderboard";
+import AdminPage from "./components/AdminPage.jsx";
+import HelpModal from "./components/HelpModal.jsx";
 
 const Home = () => {
   const token = localStorage.getItem('shiitake_token');
@@ -34,6 +37,7 @@ const App = () => {
   const userID = localStorage.getItem('shiitake_userID');
   const isLoggedIn = !!localStorage.getItem('shiitake_token');
   const isAdmin = localStorage.getItem('shiitake_role') === 'admin';
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('shiitake_token');
@@ -54,6 +58,18 @@ const App = () => {
               </li>
               <li className="nav-item">
                     <Link className="nav-link" to="/search">Search</Link>
+              </li>
+              <li className="nav-item">
+                    <Link className="nav-link" to="/leaderboard">Leaderboard</Link>
+              </li>
+              <li className="nav-item">
+                <button
+                  className="nav-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  onClick={() => setShowHelp(true)}
+                >
+                  Help
+                </button>
               </li>
               {!isLoggedIn ? (
                 <>
@@ -93,9 +109,12 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile/:pk" element={<Profile />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/cr/:pk" element={<CRPage />} />
         <Route path="/admin" element={<AdminPage />} />
       </Routes>
+
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </Router>
   );
 };
