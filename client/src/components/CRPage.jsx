@@ -14,7 +14,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 const API_BASE = '';
 
 const CRPage = () => {
-  const { pk } = useParams(); // 'faura-1' in this example
+  const { pk } = useParams(); 
   const [cr, setCR] = useState({
     building: '',
     floor: '',
@@ -22,6 +22,7 @@ const CRPage = () => {
     tags: []
   });
   const [reviews, setReviews] = useState([]); 
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
   const [showForm,      setShowForm]      = useState(false)
   const [editingReview, setEditingReview] = useState(null)
@@ -76,7 +77,13 @@ const CRPage = () => {
             const myReviews = allReviews.filter((r) => r.CRId === pkNumber || String(r.CRId) === String(pk)).map(mapReviewFromApi);
             setReviews(myReviews);
 
+            if (currentUserId) {
+              const userRes = await fetch(`${API_BASE}/users/${currentUserId}`);
+              const userData = await userRes.json();
+              setUser(userData); 
+            }
             setLoading(false);
+          
         } catch (err) {
             console.error("Fetch error:", err);
             setLoading(false);
@@ -295,6 +302,36 @@ const CRPage = () => {
       } );
     }
 
+    async function handleToggleFavorite() {
+      const currentFavorites = user.favoriteCRs || []
+      let updatedFavorites; 
+      const isFavorite = user?.favoriteCRs?.some(favId => String(favId) === String(pk))
+      if (isFavorite)
+        updatedFavorites = currentFavorites.filter(favId => String(favId) !== String(pk));
+      else {
+        const newFavorite = [Number(pk)]
+        updatedFavorites = [...new Set([...currentFavorites, ...newFavorite])];
+      }
+      setUser({ ...user, favoriteCRs: updatedFavorites });
+      const previousUser = { ...user };
+
+      try {
+            const response = await fetch(`${API_BASE}/users/${currentUserId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            favoriteCRs: updatedFavorites
+            }),
+          });
+        if (!response.ok) throw new Error('Failed to add favorite')
+      } catch (error) {
+        console.error(error)
+        setUser(previousUser);
+        alert('Could not add favorite. Please try again.')
+      }
+    }
+
+    const isFavorite = user?.favoriteCRs?.some(favId => String(favId) === String(pk))
     // Render
 
     return (
@@ -309,7 +346,8 @@ const CRPage = () => {
             marginBottom: '20px',
             color: 'white',
           }}>
-            <h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
+            {loading ? <p>Loading CR...</p> : 
+            <><h1 style={{ margin: '0 0 4px', fontSize: '22px', fontFamily: 'Georgia, serif' }}>
               {cr.building} — {cr.name}
                <button
                 onClick={handleNavigate}
@@ -327,6 +365,25 @@ const CRPage = () => {
               >
                 Navigate
               </button>
+              {isLoggedIn ? <><button
+                onClick={handleToggleFavorite}
+                style={{
+                  padding: '10px',
+                  marginLeft: '16px',
+                  background: isFavorite
+                  ? '#FFD700'  // yellow if in favorites
+                  : '#e6f0eb', // white otherwise
+                  color: '#153448',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                }}
+              >
+                {isFavorite ? '❤' : '♡'}
+              </button></> : <></>}
+              
             </h1>
 
             {/* Availability badge */}
@@ -372,9 +429,9 @@ const CRPage = () => {
                   {amenity}
                 </span>
               ))}
-            </div>
+            </div></>}
           </div>
-
+          
           {/* ── Reviews Section ── */}
           <div style={{
             background: '#EDE5D5',

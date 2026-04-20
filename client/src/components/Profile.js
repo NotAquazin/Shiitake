@@ -23,6 +23,7 @@ const Profile = () => {
     ];
 
     const [crs, setCRs] = useState([]);
+    const [favCRs, setFavCRs] = useState([]);
     const navigate = useNavigate();
     const [userVotes,     setUserVotes]     = useState(() => {
     const username = localStorage.getItem('shiitake_username') || '';
@@ -147,7 +148,13 @@ const Profile = () => {
             }
         }
         loadCR();
-    }, [pk]); 
+        if (user) {
+            console.log(user.favoriteCRs)
+            console.log(crs)
+            setFavCRs(crs.filter(cr => user.favoriteCRs.includes(cr.id)));
+        }
+        
+    }, [pk, user]); 
 
     // HANDLERS 
     const handleEditProfile = () => {
@@ -237,6 +244,10 @@ const Profile = () => {
         navigate(`/cr/${review.CRId}`); // Navigate to CR review page
     };
 
+    const handleCRPage = (crID) => {
+        navigate(`/cr/${crID}`); // Navigate to CR review page
+    };
+
     async function handleSaveProfile(newDesc) {
       try {
           const response = await fetch(`${API_BASE}/users/${pk}`, {
@@ -268,10 +279,10 @@ const Profile = () => {
 
     async function handleUpdateBadges(reviews) {
         const newBadges = [];
-        if (reviews.length >= 5) { newBadges.push(`Bronze_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 10) { newBadges.push(`Silver_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 20) { newBadges.push(`Gold_${monthNames[currentMonth-1]}_${currentYear}`) ;}
-        if (reviews.length >= 30) { newBadges.push(`Platinum_${monthNames[currentMonth-1]}_${currentYear}`) ;}
+        if (reviews.length >= 5) { newBadges.push(`Bronze_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 10) { newBadges.push(`Silver_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 20) { newBadges.push(`Gold_${monthNames[currentMonth]}_${currentYear}`) ;}
+        if (reviews.length >= 30) { newBadges.push(`Platinum_${monthNames[currentMonth]}_${currentYear}`) ;}
 
         try {
             const response = await fetch(`${API_BASE}/users/${pk}`, {
@@ -283,7 +294,7 @@ const Profile = () => {
           });
 
         if (!response.ok) {
-                  const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
+            const errorMsg = response?.error || JSON.stringify(response) || 'Unknown error';
 
             const errorData = await response.json();
             errorMsg = errorData.error || JSON.stringify(errorData);
@@ -398,16 +409,38 @@ const Profile = () => {
                     <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448', textAlign: 'center' }}>
                         Badges
                     </h2>
-                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
                             {user.badges.length > 0 ? (
-                                user.badges.map((badgeStr, index) => (
-                                    <BadgeCircle key={index} badgeString={badgeStr} />
-                                ))
-                            ) : (
-                                <p style={{ fontSize: '14px', color: '#999' }}>No badges yet!</p>
-                            )}
-                        </div>
+                            user.badges.map((badgeStr, index) => (
+                                <BadgeCircle key={index} badgeString={badgeStr} />
+                            ))
+                        ) : (
+                            <p style={{ fontSize: '14px', color: '#999' }}>No badges yet!</p>
+                        )}
+                    </div>
+                </div>
+
+                <div style={{
+                    background: '#EDE5D5',
+                    borderRadius: '12px',
+                    padding: '20px 24px',
+                    marginBottom: '20px',
+                }}>
+                <h2 style={{ margin: '0 0 20px', fontSize: '18px', color: '#153448', textAlign: 'center' }}>
+                        Favorite CRs
+                    </h2>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
+                            {favCRs.length > 0 ? (
+                            favCRs.map(cr => (
+                                 <button 
+                                        onClick={() => handleCRPage(cr.id)} 
+                                        style={pillBtn('#e3f2fd', '#1565c0')}>
+                                    {cr.building} — {cr.name}
+                                </button>
+                            ))
+                        ) : (
+                            <p style={{ fontSize: '14px', color: '#999' }}>No favorites yet!</p>
+                        )}
                     </div>
                 </div>
 
@@ -438,7 +471,12 @@ const Profile = () => {
                                         onClick={() => handleReviewToCR(review)} 
                                         style={pillBtn('#e3f2fd', '#1565c0')}
                                     >
-                                        {(crs.find(c => String(c.id) === String(review.CRId))?.name || 'Unknown CR')}
+                                    {(() => {
+                                        const foundCR = crs.find(c => String(c.id) === String(review.CRId));
+                                        return foundCR 
+                                        ? `${foundCR.building} — ${foundCR.name}` 
+                                        : 'Unknown CR';
+                                    })()}
                                     </button>
                                     <ReviewCard
                                         key={review.id}

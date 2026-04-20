@@ -127,13 +127,16 @@ app.put('/users/:id', async (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         const currentBadges = user.badges || [];
+        const favorites = user.favoriteCRs || [];
         const newBadges = Array.isArray(req.body.badges) ? req.body.badges : [];
+        const updatedFavorites = Array.isArray(req.body.favoriteCRs) ? req.body.favoriteCRs : favorites;
         const updatedBadges = [...new Set([...currentBadges, ...newBadges])];
 
         await user.update({
             description: req.body.description,
             email: req.body.email,
             badges: updatedBadges,
+            favoriteCRs: updatedFavorites,
         });
 
         return res.status(200).json({ message: 'User updated successfully!', user });
