@@ -241,8 +241,27 @@ async function recalcAverageRating(CRId) {
 
 app.post('/reviews', async (req, res) => {
     try {
+        const { CRId, UserId } = req.body;
+
+        // Rate limit: one review per user per CR per 24 hours
+        const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000
+        if (UserId && CRId) {
+            const since = new Date(Date.now() - REVIEW_WINDOW_MS);
+            const recent = await Review.findOne({
+                where: { UserId, CRId, createdAt: { [Op.gte]: since } },
+                order: [['createdAt', 'DESC']],
+            });
+            if (recent) {
+                const nextAllowed = new Date(new Date(recent.createdAt).getTime() + REVIEW_WINDOW_MS);
+                return res.status(429).json({
+                    error: 'You can only review this CR once every 24 hours.',
+                    nextAllowed: nextAllowed.toISOString(),
+                });
+            }
+        }
+
         const newReview = await Review.create(req.body);
-        if (req.body.CRId) await recalcAverageRating(req.body.CRId);
+        if (CRId) await recalcAverageRating(CRId);
         res.status(201).json({ message: 'Review created successfully!', review: newReview });
     } catch (err) {
         console.error(err);
