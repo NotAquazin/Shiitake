@@ -246,7 +246,17 @@ function Search() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                       {pageResults.map((cr) => (
                         <Link key={cr.id} to={`/cr/${cr.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer' }}>
+                          <div
+                            style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '2px 4px 14px rgba(0,0,0,0.18)', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.transform = 'translateX(4px)'
+                              e.currentTarget.style.boxShadow = '-4px 0 0 #E8A020, 0 4px 18px rgba(0,0,0,0.12)'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.transform = 'translateX(0)'
+                              e.currentTarget.style.boxShadow = '2px 4px 14px rgba(0,0,0,0.18)'
+                            }}
+                          >
 
                             {/* Card header */}
                             <div style={{ background: '#153448', padding: '12px 16px', textAlign: 'center' }}>
