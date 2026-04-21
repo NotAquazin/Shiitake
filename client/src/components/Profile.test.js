@@ -12,6 +12,7 @@ const mockUser = {
   role: 'user',
   description: 'My bio',
   badges: [],
+  favoriteCRs: [],
 };
 
 async function renderProfile(customReviews = []) {
@@ -24,6 +25,9 @@ async function renderProfile(customReviews = []) {
     }
     if (url.includes('/reviews')) {
       return Promise.resolve({ ok: true, json: async () => customReviews });
+    }
+    if (url.includes('/CRs')) {
+      return Promise.resolve({ ok: true, json: async () => [] });
     }
     return Promise.reject(new Error(`Unknown URL: ${url}`));
   });
@@ -45,6 +49,11 @@ describe('Profile page', () => {
 
   beforeEach(() => {
     fetch.mockClear();
+    Storage.prototype.getItem = jest.fn((key) => {
+      if (key === 'shiitake_userID') return '1';
+      if (key === 'shiitake_username') return 'testuser';
+      return null;
+    });
   });
 
   it('shows the Edit Profile button when not editing', async () => {
