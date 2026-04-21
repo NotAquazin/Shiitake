@@ -1,5 +1,6 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import AdminPage from './AdminPage'
 
 // ── Global mocks ──────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ function setupFetch({ crs = CRS_15, reviews = [], tags = TAGS } = {}) {
 async function renderAdmin() {
   localStorage.setItem('shiitake_token', 'fake-admin-token')
   await act(async () => {
-    render(<AdminPage />)
+    render(<MemoryRouter><AdminPage /></MemoryRouter>)
   })
 }
 
