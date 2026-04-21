@@ -360,7 +360,8 @@ describe('CR Search pagination', () => {
     await renderSearch();
 
     await waitFor(() => {
-      expect(screen.getAllByRole('link')).toHaveLength(16);
+      // 2 <Link> elements per card (header + body) × 16 cards = 32
+      expect(screen.getAllByRole('link')).toHaveLength(32);
     });
     expect(screen.queryByRole('link', { name: /CR 17/ })).not.toBeInTheDocument();
   });
@@ -407,7 +408,8 @@ describe('CR Search pagination', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByRole('link')).toHaveLength(16);
+      // 2 <Link> elements per card (header + body) × 16 cards = 32
+      expect(screen.getAllByRole('link')).toHaveLength(32);
       expect(screen.queryByRole('link', { name: /CR 17/ })).not.toBeInTheDocument();
     });
   });
