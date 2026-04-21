@@ -142,8 +142,8 @@ const Profile = () => {
                 const crData = await crRes.json();
                 setCRs(crData);
                 
-                if (user) {
-                    setFavCRs(crs.filter(cr => user.favoriteCRs.includes(cr.id)));
+                if (userData) {
+                    setFavCRs(crData.filter(cr => userData.favoriteCRs.includes(cr.id)));
                 }
 
                 setLoading(false);
@@ -153,7 +153,7 @@ const Profile = () => {
             }
         }
         loadProfile();
-    }, [pk, user]); 
+    }, [pk]); 
 
     // HANDLERS 
     const handleEditProfile = () => {
@@ -312,7 +312,6 @@ const Profile = () => {
         const data = await response.json();
         const updatedUser = data.user;
         setUser(updatedUser);
-        setEditingProfile(false)
       } catch (error) {
         console.error(error)
        
@@ -353,9 +352,6 @@ const Profile = () => {
                         {user.username}
                     </span>
 
-                    <h1 style={{ margin: '0 0 4px', fontSize: '15px' }}>
-                        {user.email}
-                    </h1>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>Role: {user.role}</p>
 
                     {editingProfile ? (
@@ -366,7 +362,7 @@ const Profile = () => {
                             onChange={(e) => setDesc(e.target.value)}
                             placeholder={`${user.description || ""}`}
                             rows={4}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #948979', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #948979', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', color: '#333' }}
                         />
 
                         <button onClick={() => handleSaveProfile(desc)} style={pillBtn('#c8e6c9', '#2e7d32')}>

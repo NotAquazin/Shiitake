@@ -45,19 +45,31 @@ const App = () => {
     window.location.href = '/login'; // Redirect to login
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleMenu = () => setIsOpen(!isOpen);
+
   return (
     <Router>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container">
-          <Link className="navbar-brand" to="/">Shiitake</Link>
-          <div className="collapse navbar-collapse">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to="/">Home</Link>
-              </li>
-              <li className="nav-item">
-                    <Link className="nav-link" to="/search">Search</Link>
-              </li>
+            <Link className="navbar-brand" to="/">Shiitake</Link>
+            <button 
+                className="navbar-toggler" 
+                type="button" 
+                onClick={toggleMenu} // Toggle state on click
+                aria-expanded={isOpen}
+            >
+                <span className="navbar-toggler-icon"></span>
+            </button>
+
+            <div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`}>
+                <ul className="navbar-nav ms-auto">
+                  <li className="nav-item">
+                      <Link className="nav-link" to="/" onClick={() => setIsOpen(false)}>Home</Link>
+                  </li>
+                  <li className="nav-item">
+                      <Link className="nav-link" to="/search" onClick={() => setIsOpen(false)}>Search</Link>
+                  </li>
               <li className="nav-item">
                     <Link className="nav-link" to="/leaderboard">Leaderboard</Link>
               </li>
@@ -90,7 +102,7 @@ const App = () => {
                     </li>
                   )}
                   <li className="nav-item d-flex align-items-center">
-                    <span className="navbar-text ms-3 text-white fw-bold me-3">Hello, {username || 'User'}</span>
+                    <span className="navbar-text text-white fw-bold me-3 px-2">Hello, {username || 'User'}</span>
                   </li>
                   <li className="nav-item d-flex align-items-center">
                     <button onClick={handleLogout} className="btn btn-outline-danger btn-sm">Logout</button>
